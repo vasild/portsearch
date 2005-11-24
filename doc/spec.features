@@ -1,0 +1,12 @@
+
+desired features:
+
+* allow searching for ports that install given file
+* do everything that can be done with `make search' in the ports directory
+* be as fast as possible
+* easy addition of new search and output criteria
+* easy addition of new data storage modules. That is - do not rely on specific
+  sqlite, mysql or postgres features, even make it as easy as possible to add
+  non-SQL databases
+
+$Id: spec.features,v 1.1 2005/11/24 15:08:26 dd Exp $
