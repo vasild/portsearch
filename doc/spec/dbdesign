@@ -1,0 +1,18 @@
+categories {
+	category
+}
+
+ports {
+	category
+	portdirname
+}
+
+prefixes {
+	prefix
+}
+
+files {
+	port
+	prefix
+	path
+}
