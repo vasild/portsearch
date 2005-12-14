@@ -1,7 +1,7 @@
 #
 # Portsearch
 #
-# $Id: Makefile,v 1.2 2005/12/14 06:11:47 dd Exp $
+# $Id: Makefile,v 1.3 2005/12/14 07:32:16 dd Exp $
 #
 
 MKDEP?=	/usr/bin/mkdep
@@ -13,7 +13,7 @@ CFLAGS:=	${CFLAGS:C/-O[023s]//g} -g
 
 PROGS=\
 	get_port_mtime_main \
-	portsearch_mkdb \
+	portsearch \
 	vector_main
 
 # get_port_mtime_main
@@ -21,11 +21,12 @@ get_port_mtime_main_objs=\
 	get_port_mtime.o \
 	get_port_mtime_main.o
 
-# portsearch_mkdb
-portsearch_mkdb_objs=\
+# portsearch
+portsearch_objs=\
 	execcmd.o \
 	get_port_mtime.o \
-	portsearch_mkdb.o \
+	mkdb.o \
+	portsearch.o \
 	store_txt.o \
 	vector.o
 

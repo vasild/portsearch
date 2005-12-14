@@ -31,11 +31,13 @@
 
 #include "execcmd.h"
 #include "get_port_mtime.h"
+#include "mkdb.h"
 #include "portdef.h"
+#include "portsearch.h"
 #include "store.h"
 #include "vector.h"
 
-static const char rcsid[] = "$Id: portsearch_mkdb.c,v 1.1 2005/12/14 06:11:47 dd Exp $";
+static const char rcsid[] = "$Id: mkdb.c,v 1.1 2005/12/14 07:32:16 dd Exp $";
 
 struct arg_t {
 	unsigned	ports_cnt;
@@ -46,36 +48,39 @@ struct arg_t {
 /*
  * Process all categories, contained in `line' (space-separated)
  */
-int process_categories(char *line, void *arg);
+static int process_categories(char *line, void *arg);
 
 /*
  * Process all ports, contained in `line' (space-separated)
  */
-int process_ports_in_cat(char *line, void *arg);
+static int process_ports_in_cat(char *line, void *arg);
 
 /*
  * Create the packing list for a given port with make generate-plist
  */
-void mkplist(struct port_t *port);
+static void mkplist(struct port_t *port);
 
 /*
  * Process each line from port's plist, arg points to a port_t structure
  */
-int process_plist(char *line, void *arg);
+static int process_plist(char *line, void *arg);
 
 /*
  * Cut string `s' at first occurence of any of chars in `stop'
  */
-void cut_to(char *s, const char *stop);
+static void cut_to(char *s, const char *stop);
 
 /**/
 
-int
-main(int argc, char **argv)
+void
+mkdb(const struct options_t *opts)
 {
 	struct arg_t	arg;
 
 	arg.ports_cnt = 1;
+
+	printf("Creating database...\n");
+	fflush(stdout);
 
 	s_start(&arg.store);
 
@@ -91,11 +96,9 @@ main(int argc, char **argv)
 #endif
 
 	s_end(&arg.store);
-
-	return 0;
 }
 
-int
+static int
 process_categories(char *line, void *arg_void)
 {
 	struct arg_t	*arg = (struct arg_t *)arg_void;
@@ -116,7 +119,7 @@ process_categories(char *line, void *arg_void)
 	return 0;
 }
 
-int
+static int
 process_ports_in_cat(char *line, void *arg_void)
 {
 	struct arg_t			*arg = (struct arg_t *)arg_void;
@@ -151,7 +154,7 @@ process_ports_in_cat(char *line, void *arg_void)
 	return 0;
 }
 
-void
+static void
 mkplist(struct port_t *port)
 {
 	char		portdir[PATH_MAX];
@@ -175,7 +178,7 @@ mkplist(struct port_t *port)
 	execcmd(cmd, args, process_plist, port);
 }
 
-int
+static int
 process_plist(char *line, void *arg)
 {
 	struct port_t	*port = (struct port_t *)arg;
@@ -188,7 +191,7 @@ process_plist(char *line, void *arg)
 	return 0;
 }
 
-void
+static void
 cut_to(char *s, const char *stop)
 {
 	*(s + strcspn(s, stop)) = '\0';
