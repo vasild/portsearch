@@ -1,19 +1,73 @@
 #
 # Portsearch
 #
-# $Id: Makefile,v 1.1 2005/11/23 06:41:47 dd Exp $
+# $Id: Makefile,v 1.2 2005/12/14 06:11:47 dd Exp $
 #
+
+MKDEP?=	/usr/bin/mkdep
+RM?=	/bin/rm
 
 CFLAGS+=	-Wall -Werror
 
-PROGS=	portsearch
+CFLAGS:=	${CFLAGS:C/-O[023s]//g} -g
+
+PROGS=\
+	get_port_mtime_main \
+	portsearch_mkdb \
+	vector_main
+
+# get_port_mtime_main
+get_port_mtime_main_objs=\
+	get_port_mtime.o \
+	get_port_mtime_main.o
+
+# portsearch_mkdb
+portsearch_mkdb_objs=\
+	execcmd.o \
+	get_port_mtime.o \
+	portsearch_mkdb.o \
+	store_txt.o \
+	vector.o
+
+# vector
+vector_main_objs=\
+	vector.o \
+	vector_main.o
+
+#
+# define targets
+#
 
 build: ${PROGS}
 
-clean:
-	rm -f *.o portsearch *.core
+depend:
+	${MKDEP} ${CFLAGS} *.c
 
-portsearch:
-	${CC} ${CFLAGS} ${@}.c -o ${@}
+test: test_get_port_mtime
+
+clean:
+	${RM} -f *.o *.core ${PROGS} .depend
+
+#
+
+test_get_port_mtime: get_port_mtime_main
+	@./get_port_mtime_main.sh
+	@echo "${@} passed"
+
+#
+
+.for prog in ${PROGS}
+
+.for obj in ${${prog}_objs}
+.if !target(${obj})
+${obj}:
+	${CC} ${CFLAGS} -c ${obj:.o=.c} -o ${obj}
+.endif
+.endfor
+
+${prog}: ${${prog}_objs}
+	${CC} ${LDFLAGS} ${${prog}_objs} -o ${prog}
+
+.endfor
 
 # EOF
