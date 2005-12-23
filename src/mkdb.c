@@ -37,7 +37,7 @@
 #include "store.h"
 #include "vector.h"
 
-static const char rcsid[] = "$Id: mkdb.c,v 1.2 2005/12/23 10:00:18 dd Exp $";
+static const char rcsid[] = "$Id: mkdb.c,v 1.3 2005/12/23 15:33:05 dd Exp $";
 
 struct arg_t {
 	unsigned	ports_cnt;
@@ -56,7 +56,7 @@ static void process_categories(char *line, void *arg);
 static void process_ports_in_cat(char *line, void *arg);
 
 /*
- * Create the packing list for a given port with make generate-plist
+ * Create the packing list for a given port using make generate-plist
  */
 static void mkplist(struct port_t *port);
 
