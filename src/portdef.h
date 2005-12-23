@@ -35,10 +35,17 @@
 
 struct port_t {
 	unsigned	id;  /* port number */
+	int		matched;  /* matched by some search criteria */
 	char		*fs_category;  /* filesystem category's dir name */
 	char		*fs_port;  /* filesystem port's dir name */
 	time_t		mtime;  /* last modification time */
 	struct vector_t	plist;  /* plist files */
+};
+
+/* there may be NULL pointers in arr */
+struct ports_t {
+	struct port_t	**arr;  /* ports' array */
+	size_t		sz;  /* number of allocated elements in arr */
 };
 
 #endif  /* PORTDEF_H */

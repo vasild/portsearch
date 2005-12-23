@@ -30,11 +30,9 @@
 /*
  * Execute command `cmd' with execvp(3) and call `process' for each line
  * of output.
- * If `process' returns -1 or any other error occurs then the whole program
- * terminates.
  */
 void execcmd(const char *cmd, char *const args[],
-	     int (*process)(char *, void *), void *process_arg);
+	     void (*process)(char *, void *), void *process_arg);
 
 #endif  /* EXECCMD_H */
 

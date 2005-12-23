@@ -37,7 +37,7 @@
 #include "store.h"
 #include "vector.h"
 
-static const char rcsid[] = "$Id: mkdb.c,v 1.1 2005/12/14 07:32:16 dd Exp $";
+static const char rcsid[] = "$Id: mkdb.c,v 1.2 2005/12/23 10:00:18 dd Exp $";
 
 struct arg_t {
 	unsigned	ports_cnt;
@@ -48,12 +48,12 @@ struct arg_t {
 /*
  * Process all categories, contained in `line' (space-separated)
  */
-static int process_categories(char *line, void *arg);
+static void process_categories(char *line, void *arg);
 
 /*
  * Process all ports, contained in `line' (space-separated)
  */
-static int process_ports_in_cat(char *line, void *arg);
+static void process_ports_in_cat(char *line, void *arg);
 
 /*
  * Create the packing list for a given port with make generate-plist
@@ -63,12 +63,7 @@ static void mkplist(struct port_t *port);
 /*
  * Process each line from port's plist, arg points to a port_t structure
  */
-static int process_plist(char *line, void *arg);
-
-/*
- * Cut string `s' at first occurence of any of chars in `stop'
- */
-static void cut_to(char *s, const char *stop);
+static void process_plist(char *line, void *arg);
 
 /**/
 
@@ -82,7 +77,7 @@ mkdb(const struct options_t *opts)
 	printf("Creating database...\n");
 	fflush(stdout);
 
-	s_start(&arg.store);
+	s_upd_start(&arg.store);
 
 #if 1
 	char		*cmd = "make";
@@ -95,10 +90,10 @@ mkdb(const struct options_t *opts)
 	process_categories(categories, &arg);
 #endif
 
-	s_end(&arg.store);
+	s_upd_end(&arg.store);
 }
 
-static int
+static void
 process_categories(char *line, void *arg_void)
 {
 	struct arg_t	*arg = (struct arg_t *)arg_void;
@@ -108,18 +103,14 @@ process_categories(char *line, void *arg_void)
 	char		*cmd = "make";
 	char *const	args[] = {cmd, "-C", path, "-V", "SUBDIR", NULL};
 
-	cut_to(line, "\n");
-
 	while ((arg->category = strsep((char **)&line, " ")) != NULL)
 	{
 		snprintf(path, sizeof(path), "%s/%s", PORTSDIR, arg->category);
 		execcmd(cmd, args, process_ports_in_cat, arg);
 	}
-
-	return 0;
 }
 
-static int
+static void
 process_ports_in_cat(char *line, void *arg_void)
 {
 	struct arg_t			*arg = (struct arg_t *)arg_void;
@@ -128,8 +119,6 @@ process_ports_in_cat(char *line, void *arg_void)
 	char				*file;
 
 	port.fs_category = arg->category;
-
-	cut_to(line, "\n");
 
 	while ((port.fs_port = strsep((char **)&line, " ")) != NULL)
 	{
@@ -142,7 +131,7 @@ process_ports_in_cat(char *line, void *arg_void)
 		vi_reset(&vi, &port.plist);
 
 		while (vi_next(&vi, (void **)&file))
-			s_add_file(&arg->store, &port, file);
+			s_add_pfile(&arg->store, &port, file);
 
 		v_destroy(&port.plist);
 
@@ -150,8 +139,6 @@ process_ports_in_cat(char *line, void *arg_void)
 
 		arg->ports_cnt++;
 	}
-
-	return 0;
 }
 
 static void
@@ -178,23 +165,13 @@ mkplist(struct port_t *port)
 	execcmd(cmd, args, process_plist, port);
 }
 
-static int
+static void
 process_plist(char *line, void *arg)
 {
 	struct port_t	*port = (struct port_t *)arg;
 
-	cut_to(line, "\n");
-
 	if (line[0] != '@')
 		v_add(&port->plist, line, strlen(line) + 1);
-
-	return 0;
-}
-
-static void
-cut_to(char *s, const char *stop)
-{
-	*(s + strcspn(s, stop)) = '\0';
 }
 
 /* EOF */

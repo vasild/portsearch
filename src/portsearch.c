@@ -32,9 +32,11 @@
 #include <unistd.h>
 
 #include "mkdb.h"
+#include "portdef.h"
 #include "portsearch.h"
+#include "store.h"
 
-static const char rcsid[] = "$Id: portsearch.c,v 1.2 2005/12/14 07:32:16 dd Exp $";
+static const char rcsid[] = "$Id: portsearch.c,v 1.3 2005/12/23 10:00:18 dd Exp $";
 
 /*
  * Print usage information end exit
@@ -42,7 +44,8 @@ static const char rcsid[] = "$Id: portsearch.c,v 1.2 2005/12/14 07:32:16 dd Exp 
 static void usage();
 
 /*
- * Parse command line options, calls usage() if incorrect options are given
+ * Parse command line options and store results in `opts',
+ * calls usage() if incorrect options are given
  */
 static void parse_opts(int argc, char **argv, struct options_t *opts);
 
@@ -57,6 +60,8 @@ main(int argc, char **argv)
 
 	if (opts.update_db)
 		mkdb(&opts);
+	else if (opts.search_file)
+		show_ports_by_pfile(&opts);
 
 	return 0;
 }
@@ -99,6 +104,18 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 		default:
 			usage();
 		}
+
+	argc -= optind;
+	argv += optind;
+
+	if (argc > 0)
+		usage();
+
+	if (!opts->update_db && !opts->search_file)
+		usage();
+
+	if (opts->update_db && opts->search_file)
+		usage();
 }
 
 /* EOF */

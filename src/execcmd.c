@@ -36,23 +36,16 @@
 #include <unistd.h>
 
 #include "execcmd.h"
+#include "exhaust_fp.h"
 
 #define PIPE_IN		1
 #define PIPE_OUT	0
 
-static const char rcsid[] = "$Id: execcmd.c,v 1.1 2005/12/14 06:11:47 dd Exp $";
-
-/*
- * Sequentially read lines from `fp' until EOF or error arrives and
- * call `process' for each line.
- * If process returns -1, then abort the whole program.
- */
-static void exhaust_fp(FILE *fp,
-		       int (*process)(char *, void *), void *process_arg);
+static const char rcsid[] = "$Id: execcmd.c,v 1.2 2005/12/23 10:00:18 dd Exp $";
 
 void
 execcmd(const char *cmd, char *const args[],
-	int (*process)(char *, void *), void *process_arg)
+	void (*process)(char *, void *), void *process_arg)
 {
 	int	p[2];
 	pid_t	pid;
@@ -111,40 +104,6 @@ execcmd(const char *cmd, char *const args[],
 			     WCOREDUMP(status) ? " (core dumped)" : "");
 		}
 	}
-}
-
-static void
-exhaust_fp(FILE *fp, int (*process)(char *, void *), void *process_arg)
-{
-	char	*buf;
-	size_t	bufsz = BUFSIZ;  /* start with some reasonable size */
-	size_t	bufofft = 0;
-	size_t	buflen;
-
-        if ((buf = (char *)malloc(bufsz)) == NULL)
-		err(EX_OSERR, "malloc(): %zu", bufsz);
-
-        while (fgets(buf + bufofft, bufsz - bufofft, fp) != NULL)
-	{
-                buflen = strlen(buf);
-                if (*(buf + buflen - 1) != '\n')
-		{
-                        bufsz *= 2;
-                        if ((buf = realloc(buf, bufsz)) == NULL)
-				err(EX_OSERR, "realloc(): %zu", bufsz);
-                        bufofft = buflen;
-                        continue;
-                }
-		if (process(buf, process_arg) == -1)
-			errx(EX_UNAVAILABLE,
-			     "error during processing output from command");
-                bufofft = 0;
-        }
-
-	if (ferror(fp))
-		errx(EX_IOERR, "ferror()");
-
-        free(buf);
 }
 
 /* EOF */

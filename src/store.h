@@ -30,16 +30,24 @@
 #include <stdio.h>
 
 #include "portdef.h"
+#include "portsearch.h"
 
 struct store_t {
 	FILE	*index;
 	FILE	*plist;
 };
 
+#if 0
+struct all_ports_t {
+	struct ports_t	ports;
+	char		*rawdata;
+};
+#endif
+
 /*
- * Initialize store
+ * Initialize store for updating
  */
-void s_start(struct store_t *store);
+void s_upd_start(struct store_t *store);
 
 /*
  * Add port to store
@@ -49,13 +57,37 @@ void s_add_port(struct store_t *store, const struct port_t *port);
 /*
  * Add plist file from port to store
  */
-void s_add_file(struct store_t *store, const struct port_t *port,
-		const char *file);
+void s_add_pfile(struct store_t *store, const struct port_t *port,
+		 const char *file);
 
 /*
- * Close store
+ * Close store from updating
  */
-void s_end(struct store_t *store);
+void s_upd_end(struct store_t *store);
+
+/**/
+
+void show_ports_by_pfile(const struct options_t *opts);
+
+/*
+ * Find ports that install file, which matches regular expression `file_re'.
+ * Data is malloc'd and free_ports_by_plist() must be called when it is not
+ * needed anymore. The plist member of each port, in the resulting array,
+ * contains the matched files.
+ */
+void find_ports_by_plist(const char *file_re, struct ports_t *ports);
+
+#if 0
+/*
+ * Load all ports from existing store
+ */
+void load_ports(struct ports_t *ports);
+
+/*
+ * Free `ports', initialized by previous call to load_ports
+ */
+void free_ports(struct ports_t *ports);
+#endif
 
 #endif  /* STORE_H */
 

@@ -34,13 +34,12 @@
 #include <sysexits.h>
 #include <time.h>
 
-#include "execcmd.h"
 #include "get_port_mtime.h"
 #include "portdef.h"
 
 #define DTFMT	"%Y.%m.%d %H:%M:%S"
 
-static const char rcsid[] = "$Id: get_port_mtime_main.c,v 1.1 2005/12/14 06:11:47 dd Exp $";
+static const char rcsid[] = "$Id: get_port_mtime_main.c,v 1.2 2005/12/23 10:00:18 dd Exp $";
 
 int
 main(int argc, char **argv)

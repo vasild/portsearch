@@ -36,15 +36,17 @@
 
 #include "get_port_mtime.h"
 
-#define USE_GLOB	1
+#define USE_GLOB	0
 
 #if !USE_GLOB
-#define STATFILES_SZ	3
+#define STATFILES_SZ	1  /* stat only the Makefile, if plist has changed,
+			      Makefile should have been changed too, at least
+			      to increment PORTREVISION */
 static const char *statfiles[STATFILES_SZ] =
-{"Makefile", "pkg-plist", "files"};
+{"Makefile"};
 #endif
 
-static const char rcsid[] = "$Id: get_port_mtime.c,v 1.1 2005/12/14 06:11:47 dd Exp $";
+static const char rcsid[] = "$Id: get_port_mtime.c,v 1.2 2005/12/23 10:00:18 dd Exp $";
 
 void
 get_port_mtime(struct port_t *port)

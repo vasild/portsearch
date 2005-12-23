@@ -1,7 +1,7 @@
 #
 # Portsearch
 #
-# $Id: Makefile,v 1.3 2005/12/14 07:32:16 dd Exp $
+# $Id: Makefile,v 1.4 2005/12/23 10:00:18 dd Exp $
 #
 
 MKDEP?=	/usr/bin/mkdep
@@ -23,12 +23,15 @@ get_port_mtime_main_objs=\
 
 # portsearch
 portsearch_objs=\
+	display.o \
 	execcmd.o \
+	exhaust_fp.o \
 	get_port_mtime.o \
 	mkdb.o \
 	portsearch.o \
 	store_txt.o \
-	vector.o
+	vector.o \
+	xmalloc.o
 
 # vector
 vector_main_objs=\
