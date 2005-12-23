@@ -36,96 +36,21 @@
 
 #include "get_port_mtime.h"
 
-#define USE_GLOB	0
-
-#if !USE_GLOB
-#define STATFILES_SZ	1  /* stat only the Makefile, if plist has changed,
-			      Makefile should have been changed too, at least
-			      to increment PORTREVISION */
-static const char *statfiles[STATFILES_SZ] =
-{"Makefile"};
-#endif
-
-static const char rcsid[] = "$Id: get_port_mtime.c,v 1.2 2005/12/23 10:00:18 dd Exp $";
+static const char rcsid[] = "$Id: get_port_mtime.c,v 1.3 2005/12/23 13:14:07 dd Exp $";
 
 void
 get_port_mtime(struct port_t *port)
 {
-#if USE_GLOB
-	char		pref[PATH_MAX];
-	char		patt[PATH_MAX];
-	glob_t		g;
-	int		globflags;
-	int		i;
-	struct stat	sb;
-
-	snprintf(pref, sizeof(pref), "%s/%s/%s", PORTSDIR, port->fs_category,
-		 port->fs_port);
-
-	globflags = GLOB_ERR | GLOB_NOSORT;
-
-	snprintf(patt, sizeof(patt), "%s/Makefile*", pref);
-	glob(patt, globflags, NULL, &g);
-
-	globflags |= GLOB_APPEND;
-
-	snprintf(patt, sizeof(patt), "%s/pkg-plist*", pref);
-	glob(patt, globflags, NULL, &g);
-
-	snprintf(patt, sizeof(patt), "%s/files*", pref);
-	glob(patt, globflags, NULL, &g);
-
-	if (g.gl_pathc == 0)
-		errx(EX_NOINPUT, "No crucial files found in %s/%s/%s",
-		     PORTSDIR, port->fs_category, port->fs_port);
-
-	port->mtime = 0;
-
-	for (i = 0; i < g.gl_pathc; i++)
-	{
-		if (stat(g.gl_pathv[i], &sb) == -1)
-			err(EX_OSERR, "stat(): %s", g.gl_pathv[i]);
-
-		if (port->mtime < sb.st_mtime)
-			port->mtime = sb.st_mtime;
-	}
-
-	globfree(&g);
-#else
 	char		path[PATH_MAX];
 	struct stat	sb;
-	int		files_found;
 
-	unsigned	i;
+	snprintf(path, sizeof(path), "%s/%s/%s/Makefile", PORTSDIR,
+		 port->fs_category, port->fs_port);
 
-	port->mtime = 0;
-	files_found = 0;
+	if (stat(path, &sb) == -1)
+		err(EX_OSERR, "stat(): %s", path);
 
-	for (i = 0; i < STATFILES_SZ; i++)
-	{
-		snprintf(path, sizeof(path), "%s/%s/%s/%s", PORTSDIR,
-			 port->fs_category, port->fs_port, statfiles[i]);
-
-		if (stat(path, &sb) == -1)
-		{
-			if (errno != ENOENT)  /* ignore nonexisting files */
-				err(EX_OSERR, "stat(): %s", path);
-		}
-		else
-		{
-			files_found = 1;
-		}
-
-		if (port->mtime < sb.st_mtime)
-			port->mtime = sb.st_mtime;
-	}
-
-	if (files_found == 0)
-	{
-		errx(EX_NOINPUT, "No crucial files found in %s/%s/%s",
-		     PORTSDIR, port->fs_category, port->fs_port);
-	}
-#endif
+	port->mtime = sb.st_mtime;
 }
 
 /* EOF */

@@ -58,14 +58,10 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-static const char rcsid[] = "$Id: store_txt.c,v 1.2 2005/12/23 10:00:18 dd Exp $";
+static const char rcsid[] = "$Id: store_txt.c,v 1.3 2005/12/23 13:14:07 dd Exp $";
 
-struct f_arg_t {
-	regex_t		re;
-	struct ports_t	*ports;
-};
-
-struct aarg_t {
+/* gather_pfiles argument */
+struct garg_t {
 	regex_t		re;
 	struct ports_t	ports;
 };
@@ -81,32 +77,60 @@ static char	plist_new_fn[PATH_MAX];
  */
 static void set_filenames();
 
-static void compile_pfile_re(const char *file_re, regex_t *re);
-static void open_plist(FILE **fp);
+/*
+ * Load index file into `raw' and initialize `ports' with it's contents
+ * Note that the pointers in `ports' structure point inside `raw', so
+ * be carefull not to free() raw beforehand
+ */
+static void load_ports(struct ports_t *ports, char **raw);
 
-static void f(char *line, void *arg);
-
-#if 1
-
-int pcmp(const void *p1v, const void *p2v);
-void load_ports(struct ports_t *ports, char **raw);
-void free_ports(struct ports_t *ports, char *raw);
+/*
+ * Free data, allocated by load_ports()
+ */
+static void free_ports(struct ports_t *ports, char *raw);
 
 /*
  * Load index from disk, ``raw'' will be exact image of the file's content
  */
-void load_ports_raw(char **raw);
+static void load_ports_raw(char **raw);
 
 /*
- * Calculate ports' count
+ * Free data allocated by `load_ports_raw'
  */
-size_t calc_ports_cnt(const char *raw);
+static void free_ports_raw(char *raw);
 
 /*
- * Free raw data allocated by `load_ports_raw'
+ * Place plist files that match `arg->re' in the appropriate `plist'
+ * members of the `arg->ports' structure
  */
-void free_ports_raw(char *raw);
-#endif
+static void gather_pfiles(char *line, void *arg);
+
+/*
+ */
+static void get_port_by_id(struct ports_t *ports, const char *portid,
+			   struct port_t **port);
+
+/*
+ * Calculate ports' count in the memory-image `raw' of the index file
+ */
+static size_t calc_ports_cnt(const char *raw);
+
+/*
+ * Compare 2 ports accoring to their IDs
+ */
+static int pcmp(const void *p1v, const void *p2v);
+
+/*
+ * Compile the regular expression, exit on error
+ */
+static void xregcomp(const char *restr, regex_t *re);
+
+/*
+ * Open file and exit on failure
+ */
+static void xfopen(FILE **fp, const char *filename, const char *mode);
+
+/**/
 
 void
 s_upd_start(struct store_t *store)
@@ -159,6 +183,36 @@ s_upd_end(struct store_t *store)
 		err(EX_CANTCREAT, "rename(): %s to %s", plist_new_fn, plist_fn);
 }
 
+/**/
+
+void
+show_ports_by_pfile(const struct options_t *opts)
+{
+	FILE		*plist_fp;
+	struct garg_t	garg;
+	char		*portsraw;
+
+	set_filenames();
+	
+	load_ports(&garg.ports, &portsraw);
+
+	xregcomp(opts->search_file, &garg.re);
+
+	xfopen(&plist_fp, plist_fn, "r");
+
+	exhaust_fp(plist_fp, gather_pfiles, &garg);
+
+	fclose(plist_fp);
+
+	regfree(&garg.re);
+
+	display_ports(&garg.ports, opts, DISPLAY_PFILES);
+
+	free_ports(&garg.ports, portsraw);
+}
+
+/**/
+
 static void
 set_filenames()
 {
@@ -178,280 +232,7 @@ set_filenames()
 	snprintf(plist_new_fn, sizeof(plist_new_fn), "%s-plist.new", scheme);
 }
 
-/**/
-
-void
-_get_max_portid(char *line, void *maxid_void)
-{
-	unsigned	*maxid = (unsigned *)maxid_void;
-	unsigned	current;
-
-	current = (unsigned)strtoul(line, NULL, 10);
-
-	if (current > *maxid)
-		*maxid = current;
-}
-
-unsigned
-get_max_portid()
-{
-	FILE		*fp;
-	unsigned	maxid;
-
-	if ((fp = fopen(index_fn, "r")) == NULL)
-		err(EX_NOINPUT, "fopen(): %s", index_fn);
-
-	exhaust_fp(fp, _get_max_portid, &maxid);
-
-	fclose(fp);
-
-	return maxid;
-}
-
-void
-alloc_ports(struct ports_t *ports, unsigned max_portid)
-{
-	size_t		malloc_bytes;
-	unsigned	i;
-
-	/* we want to acces max_portid'th member without nasty expressions 
-	 * like [portid-1] */
-	ports->sz = max_portid + 1;
-
-	malloc_bytes = ports->sz * sizeof(struct port_t *);
-
-	if ((ports->arr = (struct port_t **)malloc(malloc_bytes)) == NULL)
-		err(EX_OSERR, "malloc(): %zu", malloc_bytes);
-
-	for (i = 0; i < ports->sz; i++)
-		ports->arr[i] = NULL;
-}
-
-void
-load_ports_data(struct ports_t *ports)
-{
-
-}
-
-void
-find_ports_by_plist(const char *file_re, struct ports_t *ports)
-{
-	FILE		*plist_fp;
-	struct f_arg_t	f_arg;
-
-	f_arg.ports = ports;
-
-	set_filenames();
-
-	alloc_ports(ports, get_max_portid());
-
-	compile_pfile_re(file_re, &f_arg.re);
-
-	open_plist(&plist_fp);
-
-	exhaust_fp(plist_fp, f, &f_arg);
-
-	fclose(plist_fp);
-
-	regfree(&f_arg.re);
-
-	load_ports_data(ports);
-
-#if 1
-	unsigned	i;
-	for (i = 0; i < ports->sz; i++)
-		if (ports->arr[i] != NULL)
-		{
-			struct vector_iterator_t	vi;
-			char				*file;
-
-			vi_reset(&vi, &ports->arr[i]->plist);
-			while (vi_next(&vi, (void **)&file))
-				printf("%u|%s\n", ports->arr[i]->id, file);
-		}
-#endif
-}
-
 static void
-compile_pfile_re(const char *file_re, regex_t *re)
-{
-	int	comp_err;
-	char	comp_errstr[BUFSIZ];  /* BUFSIZ should be quite enough */
-
-	if ((comp_err = regcomp(re, file_re, REG_EXTENDED | REG_NOSUB)) != 0)
-	{
-		regerror(comp_err, re, comp_errstr, sizeof(comp_errstr));
-		errx(EX_USAGE, "\"%s\": %s", file_re, comp_errstr);
-	}
-}
-
-void
-open_index(FILE **fp)
-{
-	if ((*fp = fopen(index_fn, "r")) == NULL)
-		err(EX_NOINPUT, "fopen(): %s", index_fn);
-}
-
-static void
-open_plist(FILE **fp)
-{
-	if ((*fp = fopen(plist_fn, "r")) == NULL)
-		err(EX_NOINPUT, "fopen(): %s", plist_fn);
-}
-
-static void
-f(char *line, void *arg_void)
-{
-	struct f_arg_t	*arg = (struct f_arg_t *)arg_void;
-	static unsigned	line_num = 0;
-	char		*file;
-
-	unsigned	portid;
-	struct ports_t	*ports;
-	struct port_t	*port;
-
-	line_num++;
-
-	ports = arg->ports;
-
-	if ((file = strchr(line, FSp)) == NULL)
-		errx(EX_DATAERR, "corrupted datafile: %s: "
-		     "``%c'' not found on line %u", plist_fn, FSp, line_num);
-
-	/* split line into portid and filename */
-	file[0] = '\0';
-	file++;
-
-	if (regexec(&arg->re, file, 0, NULL, 0) != 0)
-		/* no match */
-		return;
-
-	portid = (unsigned)strtoul(line, NULL, 10);
-
-	if (ports->arr[portid] == NULL)
-	{
-		if ((port = (struct port_t *)malloc(sizeof(struct port_t)))
-		    == NULL)
-			err(EX_OSERR, "malloc(): %zu", sizeof(struct port_t));
-
-		port->id = portid;
-
-		v_start(&port->plist, 4);
-
-		ports->arr[portid] = port;
-	}
-
-	v_add(&ports->arr[portid]->plist, file, strlen(file) + 1);
-}
-
-
-void
-get_port_by_id(struct ports_t *ports, const char *portid, struct port_t **port)
-{
-	struct port_t	key;
-	struct port_t	*key_p;
-	struct port_t	**res;
-
-	key.id = (unsigned)strtoul(portid, NULL, 10);
-
-	key_p = &key;
-
-	res = (struct port_t **)bsearch(&key_p, ports->arr, ports->sz,
-					sizeof(struct port_t **), pcmp);
-
-	if (res == NULL)
-		errx(EX_DATAERR, "corrupted database: port with id %u exists in "
-		     "plist file but not found in index file", key.id);
-
-	*port = *res;
-}
-
-void
-gather_pfiles(char *line, void *arg)
-{
-	struct aarg_t	*aarg = (struct aarg_t *)arg;
-
-	static unsigned	line_num = 0;
-
-	char		*portid;
-	struct port_t	*port;
-	char		*FSp_pos;
-	char		*filename;
-
-	line_num++;
-
-	if ((FSp_pos = strchr(line, FSp)) == NULL)
-		errx(EX_DATAERR, "corrupted datafile: %s: "
-		     "``%c'' not found on line %u", plist_fn, FSp, line_num);
-
-	if (regexec(&aarg->re, FSp_pos + 1, 0, NULL, 0) != 0)
-		return;
-
-	/* match */
-
-	/* split line into portid and filename */
-	filename = FSp_pos + 1;
-	FSp_pos[0] = '\0';
-	portid = line;
-
-	get_port_by_id(&aarg->ports, portid, &port);
-
-	if (port->matched == 0)
-		v_start(&port->plist, 2);
-
-	port->matched = 1;
-
-	v_add(&port->plist, filename, strlen(filename) + 1);
-}
-
-void
-show_ports_by_pfile(const struct options_t *opts)
-{
-	FILE		*plist_fp;
-	struct aarg_t	aarg;
-	char		*portsraw;
-
-	set_filenames();
-	
-	load_ports(&aarg.ports, &portsraw);
-
-	compile_pfile_re(opts->search_file, &aarg.re);
-
-	open_plist(&plist_fp);
-
-	exhaust_fp(plist_fp, gather_pfiles, &aarg);
-
-	fclose(plist_fp);
-
-	regfree(&aarg.re);
-
-	display_ports(&aarg.ports, opts, DISPLAY_PFILES);
-
-	free_ports(&aarg.ports, portsraw);
-}
-
-
-#if 1
-int
-pcmp(const void *p1v, const void *p2v)
-{
-	struct port_t	*p1;
-	struct port_t	*p2;
-
-	p1 = *(struct port_t **)p1v;
-	p2 = *(struct port_t **)p2v;
-
-	if (p1 == NULL && p2 == NULL)
-		return 0;
-	if (p1 == NULL)
-		return -1;
-	if (p2 == NULL)
-		return 1;
-
-	return p1->id - p2->id;
-}
-
-void
 load_ports(struct ports_t *ports, char **raw)
 {
 	char		rs[2] = {RSi, '\0'};
@@ -460,8 +241,6 @@ load_ports(struct ports_t *ports, char **raw)
 	size_t		rec_idx, fld_idx;
 	size_t		i;
 	struct port_t	*cur_port;
-
-	set_filenames();
 
 	load_ports_raw(raw);
 
@@ -512,7 +291,7 @@ load_ports(struct ports_t *ports, char **raw)
 		err(EX_OSERR, "mergesort()");
 }
 
-void
+static void
 free_ports(struct ports_t *ports, char *raw)
 {
 	size_t	i;
@@ -526,7 +305,7 @@ free_ports(struct ports_t *ports, char *raw)
 	free_ports_raw(raw);
 }
 
-void
+static void
 load_ports_raw(char **raw)
 {
 	int		fd;
@@ -566,11 +345,75 @@ load_ports_raw(char **raw)
 
 	(*raw)[sz] = '\0';
 
-	if (close(fd) == -1)
-		err(EX_IOERR, "close(): %s", index_fn);
+	close(fd);
 }
 
-size_t
+static void
+free_ports_raw(char *raw)
+{
+	xfree(raw);
+}
+
+static void
+gather_pfiles(char *line, void *arg_void)
+{
+	struct garg_t	*arg = (struct garg_t *)arg_void;
+
+	static unsigned	line_num = 0;
+
+	char		*portid;
+	struct port_t	*port;
+	char		*FSp_pos;
+	char		*filename;
+
+	line_num++;
+
+	if ((FSp_pos = strchr(line, FSp)) == NULL)
+		errx(EX_DATAERR, "corrupted datafile: %s: "
+		     "``%c'' not found on line %u", plist_fn, FSp, line_num);
+
+	if (regexec(&arg->re, FSp_pos + 1, 0, NULL, 0) != 0)
+		return;
+
+	/* match */
+
+	/* split line into portid and filename */
+	filename = FSp_pos + 1;
+	FSp_pos[0] = '\0';
+	portid = line;
+
+	get_port_by_id(&arg->ports, portid, &port);
+
+	if (port->matched == 0)
+		v_start(&port->plist, 2);
+
+	port->matched = 1;
+
+	v_add(&port->plist, filename, strlen(filename) + 1);
+}
+
+static void
+get_port_by_id(struct ports_t *ports, const char *portid, struct port_t **port)
+{
+	struct port_t	key;
+	struct port_t	*key_p;
+	struct port_t	**res;
+
+	key_p = &key;
+
+	key.id = (unsigned)strtoul(portid, NULL, 10);
+
+	res = (struct port_t **)bsearch(&key_p, ports->arr, ports->sz,
+					sizeof(struct port_t **), pcmp);
+
+	if (res == NULL)
+		errx(EX_DATAERR, "corrupted database: port with id %u exists in "
+		     "plist file but not found in index file", key.id);
+
+	*port = *res;
+}
+
+static size_t
 calc_ports_cnt(const char *content)
 {
 	const char	*ch;
@@ -583,11 +426,43 @@ calc_ports_cnt(const char *content)
 	return cnt;
 }
 
-void
-free_ports_raw(char *raw)
+static int
+pcmp(const void *p1v, const void *p2v)
 {
-	xfree(raw);
+	struct port_t	*p1;
+	struct port_t	*p2;
+
+	p1 = *(struct port_t **)p1v;
+	p2 = *(struct port_t **)p2v;
+
+	if (p1 == NULL && p2 == NULL)
+		return 0;
+	if (p1 == NULL)
+		return -1;
+	if (p2 == NULL)
+		return 1;
+
+	return p1->id - p2->id;
 }
-#endif
+
+static void
+xregcomp(const char *restr, regex_t *re)
+{
+	int	comp_err;
+	char	comp_errstr[BUFSIZ];  /* BUFSIZ should be quite enough */
+
+	if ((comp_err = regcomp(re, restr, REG_EXTENDED | REG_NOSUB)) != 0)
+	{
+		regerror(comp_err, re, comp_errstr, sizeof(comp_errstr));
+		errx(EX_USAGE, "\"%s\": %s", restr, comp_errstr);
+	}
+}
+
+static void
+xfopen(FILE **fp, const char *filename, const char *mode)
+{
+	if ((*fp = fopen(filename, mode)) == NULL)
+		err(EX_NOINPUT, "fopen(): %s", filename);
+}
 
 /* EOF */
