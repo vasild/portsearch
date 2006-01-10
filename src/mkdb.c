@@ -41,7 +41,7 @@
 #include "store.h"
 #include "vector.h"
 
-static const char rcsid[] = "$Id: mkdb.c,v 1.5 2006/01/10 10:48:46 dd Exp $";
+static const char rcsid[] = "$Id: mkdb.c,v 1.6 2006/01/10 12:02:24 dd Exp $";
 
 struct pc_arg_t {
 	const struct options_t	*opts;
@@ -103,7 +103,7 @@ mkdb(const struct options_t *opts)
 
 	s_upd_start(arg.store);
 
-#if 0
+#if 1
 	char		*cmd = "make";
 	char *const	args[] = {cmd, "-C", PORTSDIR, "-V", "SUBDIR", NULL};
 
