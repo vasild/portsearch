@@ -58,7 +58,7 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-static const char rcsid[] = "$Id: store_txt.c,v 1.5 2006/01/10 10:37:13 dd Exp $";
+static const char rcsid[] = "$Id: store_txt.c,v 1.6 2006/01/10 15:22:44 dd Exp $";
 
 struct pline_t {
 	unsigned	portid;
@@ -299,6 +299,10 @@ void
 show_ports_by_pfile(const struct options_t *opts)
 {
 	struct garg_t	garg;
+
+	if (!s_exists(NULL))
+		errx(EX_USAGE, "Database does not exist, "
+		     "please create it first using the -u option");
 
 	set_filenames(&garg.store);
 	
