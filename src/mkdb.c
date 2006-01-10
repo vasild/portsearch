@@ -24,13 +24,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/types.h>
 #include <sys/param.h>
+#include <sys/stat.h>
 
+#include <err.h>
 #include <stdio.h>
 #include <string.h>
+#include <sysexits.h>
 
 #include "execcmd.h"
-#include "get_port_mtime.h"
 #include "logmsg.h"
 #include "mkdb.h"
 #include "portdef.h"
@@ -38,7 +41,7 @@
 #include "store.h"
 #include "vector.h"
 
-static const char rcsid[] = "$Id: mkdb.c,v 1.4 2006/01/10 09:23:47 dd Exp $";
+static const char rcsid[] = "$Id: mkdb.c,v 1.5 2006/01/10 10:48:46 dd Exp $";
 
 struct pc_arg_t {
 	const struct options_t	*opts;
@@ -67,6 +70,12 @@ static void mkplist(struct port_t *port, const struct pc_arg_t *arg);
  * Process each line from port's plist, arg points to a port_t structure
  */
 static void process_plist(char *line, void *arg);
+
+/*
+ * Retrieve port's last modification time, fs_category and fs_port members
+ * of `port' must be set
+ */
+static void get_port_mtime(struct port_t *port);
 
 /***/
 
@@ -252,6 +261,21 @@ process_plist(char *line, void *arg)
 
 	if (line[0] != '@')
 		v_add(&port->plist, line, strlen(line) + 1);
+}
+
+static void
+get_port_mtime(struct port_t *port)
+{
+	char		path[PATH_MAX];
+	struct stat	sb;
+
+	snprintf(path, sizeof(path), "%s/%s/%s/Makefile", PORTSDIR,
+		 port->fs_category, port->fs_port);
+
+	if (stat(path, &sb) == -1)
+		err(EX_OSERR, "stat(): %s", path);
+
+	port->mtime = sb.st_mtime;
 }
 
 /* EOF */

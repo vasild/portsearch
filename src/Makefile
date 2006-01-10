@@ -1,7 +1,7 @@
 #
 # Portsearch
 #
-# $Id: Makefile,v 1.5 2006/01/10 09:23:47 dd Exp $
+# $Id: Makefile,v 1.6 2006/01/10 10:48:46 dd Exp $
 #
 
 MKDEP?=	/usr/bin/mkdep
@@ -12,21 +12,14 @@ CFLAGS+=	-Wall -Werror
 CFLAGS:=	${CFLAGS:C/-O[023s]//g} -g
 
 PROGS=\
-	get_port_mtime_main \
 	portsearch \
 	vector_main
-
-# get_port_mtime_main
-get_port_mtime_main_objs=\
-	get_port_mtime.o \
-	get_port_mtime_main.o
 
 # portsearch
 portsearch_objs=\
 	display.o \
 	execcmd.o \
 	exhaust_fp.o \
-	get_port_mtime.o \
 	logmsg.o \
 	mkdb.o \
 	portsearch.o \
@@ -48,16 +41,8 @@ build: ${PROGS}
 depend:
 	${MKDEP} ${CFLAGS} *.c
 
-test: test_get_port_mtime
-
 clean:
 	${RM} -f *.o *.core ${PROGS} .depend
-
-#
-
-test_get_port_mtime: get_port_mtime_main
-	@./get_port_mtime_main.sh
-	@echo "${@} passed"
 
 #
 
