@@ -41,7 +41,7 @@
 #include "store.h"
 #include "vector.h"
 
-static const char rcsid[] = "$Id: mkdb.c,v 1.6 2006/01/10 12:02:24 dd Exp $";
+static const char rcsid[] = "$Id: mkdb.c,v 1.7 2006/01/10 15:23:21 dd Exp $";
 
 struct pc_arg_t {
 	const struct options_t	*opts;
@@ -75,7 +75,7 @@ static void process_plist(char *line, void *arg);
  * Retrieve port's last modification time, fs_category and fs_port members
  * of `port' must be set
  */
-static void get_port_mtime(struct port_t *port);
+static void get_port_mtime(const char *portsdir, struct port_t *port);
 
 /***/
 
@@ -105,7 +105,8 @@ mkdb(const struct options_t *opts)
 
 #if 1
 	char		*cmd = "make";
-	char *const	args[] = {cmd, "-C", PORTSDIR, "-V", "SUBDIR", NULL};
+	char *const	args[] = {cmd,
+		"-C", (char *)opts->portsdir, "-V", "SUBDIR", NULL};
 
 	execcmd(cmd, args, process_categories, &arg);
 #else
@@ -137,7 +138,9 @@ process_categories(char *line, void *arg_void)
 		logmsg(L_NOTICE, arg->opts->verbose, "Processing category %s\n",
 		       arg->category);
 
-		snprintf(path, sizeof(path), "%s/%s", PORTSDIR, arg->category);
+		snprintf(path, sizeof(path), "%s/%s",
+			 arg->opts->portsdir, arg->category);
+
 		execcmd(cmd, args, process_ports_in_cat, arg);
 	}
 }
@@ -157,7 +160,7 @@ process_ports_in_cat(char *line, void *arg_void)
 		logmsg(L_INFO, arg->opts->verbose, "Processing port %s/%s\n",
 		       port.fs_category, port.fs_port);
 
-		get_port_mtime(&port);
+		get_port_mtime(arg->opts->portsdir, &port);
 
 		v_start(&port.plist, 256);
 
@@ -236,8 +239,8 @@ mkplist(struct port_t *port, const struct pc_arg_t *arg)
 
 	if (create_plist)
 	{
-		snprintf(portdir, sizeof(portdir), "%s/%s/%s", PORTSDIR,
-			 port->fs_category, port->fs_port);
+		snprintf(portdir, sizeof(portdir), "%s/%s/%s",
+			 arg->opts->portsdir, port->fs_category, port->fs_port);
 
 		/* math/vecfem (and maybe others) does ``.include <Makefile.inc>''
 		 * to include /usr/ports/math/vecfem/Makefile.inc and therefore
@@ -264,13 +267,13 @@ process_plist(char *line, void *arg)
 }
 
 static void
-get_port_mtime(struct port_t *port)
+get_port_mtime(const char *portsdir, struct port_t *port)
 {
 	char		path[PATH_MAX];
 	struct stat	sb;
 
-	snprintf(path, sizeof(path), "%s/%s/%s/Makefile", PORTSDIR,
-		 port->fs_category, port->fs_port);
+	snprintf(path, sizeof(path), "%s/%s/%s/Makefile",
+		 portsdir, port->fs_category, port->fs_port);
 
 	if (stat(path, &sb) == -1)
 		err(EX_OSERR, "stat(): %s", path);

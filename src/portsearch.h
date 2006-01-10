@@ -28,6 +28,7 @@
 #define PORTSEARCH_H
 
 struct options_t {
+	const char	*portsdir;
 	int		update_db;
 	int		verbose;
 	const char	*search_file;

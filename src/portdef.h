@@ -31,8 +31,6 @@
 
 #include "vector.h"
 
-#define PORTSDIR	"/usr/ports"
-
 struct port_t {
 	unsigned	id;  /* port number */
 	int		matched;  /* matched by some search criteria */

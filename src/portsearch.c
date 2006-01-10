@@ -24,6 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/param.h>
+
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,12 +33,19 @@
 #include <sysexits.h>
 #include <unistd.h>
 
+#include "execcmd.h"
 #include "mkdb.h"
 #include "portdef.h"
 #include "portsearch.h"
 #include "store.h"
 
-static const char rcsid[] = "$Id: portsearch.c,v 1.4 2006/01/10 09:23:47 dd Exp $";
+static const char rcsid[] = "$Id: portsearch.c,v 1.5 2006/01/10 15:23:21 dd Exp $";
+
+/*
+ * Get PORTSDIR from /etc/make.conf
+ */
+static void set_portsdir(struct options_t *opts);
+static void _set_portsdir(char *line, void *arg);
 
 /*
  * Print usage information end exit
@@ -49,12 +58,16 @@ static void usage();
  */
 static void parse_opts(int argc, char **argv, struct options_t *opts);
 
-/**/
+/***/
 
 int
 main(int argc, char **argv)
 {
 	struct options_t	opts;
+
+	memset(&opts, 0, sizeof(opts));
+
+	set_portsdir(&opts);
 
 	parse_opts(argc, argv, &opts);
 
@@ -67,6 +80,28 @@ main(int argc, char **argv)
 }
 
 static void
+set_portsdir(struct options_t *opts)
+{
+	char		*cmd = "make";
+	char *const	args[] = {cmd, "-C", "/", "-V", "PORTSDIR", NULL};
+
+	execcmd(cmd, args, _set_portsdir, opts);
+
+	if (opts->portsdir[0] == '\0')
+		opts->portsdir = "/usr/ports";
+}
+
+static void
+_set_portsdir(char *line, void *arg)
+{
+	static char	portsdir[PATH_MAX];
+
+	snprintf(portsdir, sizeof(portsdir), "%s", line);
+
+	((struct options_t *)arg)->portsdir = portsdir;
+}
+
+static void
 usage()
 {
 	const char	*prog;
@@ -74,8 +109,10 @@ usage()
 	prog = getprogname();
 
 	fprintf(stderr, "Usage:\n");
-	fprintf(stderr, "%s -u [-vvv]		(update/create database)\n", prog);
-	fprintf(stderr, "%s -f fileregexp	(show ports that install file)\n", prog);
+	fprintf(stderr, "update/create database:\n");
+	fprintf(stderr, "  %s -u [-p portsdir] [-vvv]\n", prog);
+	fprintf(stderr, "show ports that install file\n");
+	fprintf(stderr, "  %s -f fileregexp\n", prog);
 
 	exit(EX_USAGE);
 }
@@ -85,19 +122,20 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 {
 	int	ch;
 
-	memset(opts, 0, sizeof(struct options_t));
-
-	while ((ch = getopt(argc, argv, "uvf:h")) != -1)
+	while ((ch = getopt(argc, argv, "f:p:uvh")) != -1)
 		switch (ch)
 		{
+		case 'f':
+			opts->search_file = optarg;
+			break;
+		case 'p':  /* or 'd'irectory or 'r'oot */
+			opts->portsdir = optarg;
+			break;
 		case 'u':
 			opts->update_db = 1;
 			break;
 		case 'v':
 			opts->verbose++;
-			break;
-		case 'f':
-			opts->search_file = optarg;
 			break;
 		case 'h':
 		case '?':
