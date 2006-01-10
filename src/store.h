@@ -58,6 +58,11 @@ int s_exists(struct store_t *s);
 void s_upd_start(struct store_t *s);
 
 /*
+ * Close store from updating
+ */
+void s_upd_end(struct store_t *s);
+
+/*
  * Add port to store
  */
 void s_add_port(struct store_t *s, const struct port_t *port);
@@ -66,11 +71,6 @@ void s_add_port(struct store_t *s, const struct port_t *port);
  * Add plist file from port to store
  */
 void s_add_pfile(struct store_t *s, const struct port_t *port, const char *file);
-
-/*
- * Close store from updating
- */
-void s_upd_end(struct store_t *s);
 
 /* store reading procedures */
 

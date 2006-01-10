@@ -58,7 +58,7 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-static const char rcsid[] = "$Id: store_txt.c,v 1.4 2006/01/10 09:23:47 dd Exp $";
+static const char rcsid[] = "$Id: store_txt.c,v 1.5 2006/01/10 10:37:13 dd Exp $";
 
 struct pline_t {
 	unsigned	portid;
@@ -72,10 +72,16 @@ struct plist_t {
 };
 
 struct store_t {
+	char		dir[PATH_MAX];
+	char		newdir[PATH_MAX];
+	char		olddir[PATH_MAX];
+
 	char		index_fn[PATH_MAX];
 	char		plist_fn[PATH_MAX];
 	char		index_new_fn[PATH_MAX];
 	char		plist_new_fn[PATH_MAX];
+	char		index_old_fn[PATH_MAX];
+	char		plist_old_fn[PATH_MAX];
 
 	FILE		*index_fp;
 	FILE		*plist_fp;
@@ -155,6 +161,11 @@ static void free_plist(struct store_t *s);
 static int plines_cmp(const void *l1v, const void *l2v);
 
 /*
+ * Remove old db dir
+ */
+static void rm_olddir(const struct store_t *s);
+
+/*
  * Compile the regular expression, exit on error
  */
 static void xregcomp(const char *restr, regex_t *re);
@@ -203,17 +214,45 @@ s_exists(struct store_t *s)
 void
 s_upd_start(struct store_t *s)
 {
+	const char	*mkdirs[] = {DBDIR, s->newdir};
+	int		i;
+
 	set_filenames(s);
 
-	if (mkdir(DBDIR, 0755) == -1)
-		if (errno != EEXIST)
-			err(EX_CANTCREAT, "mkdir(): %s", DBDIR);
+	for (i = 0; i < sizeof(mkdirs) / sizeof(const char *); i++)
+		if (mkdir(mkdirs[i], 0755) == -1)
+			if (errno != EEXIST)
+				err(EX_CANTCREAT, "mkdir(): %s", mkdirs[i]);
 
 	if ((s->index_new_fp = fopen(s->index_new_fn, "w")) == NULL)
 		err(EX_CANTCREAT, "fopen(): %s", s->index_new_fn);
 
 	if ((s->plist_new_fp = fopen(s->plist_new_fn, "w")) == NULL)
 		err(EX_CANTCREAT, "fopen(): %s", s->plist_new_fn);
+}
+
+void
+s_upd_end(struct store_t *s)
+{
+	/* close newly created db files */
+	if (fclose(s->index_new_fp) == -1)
+		err(EX_IOERR, "fclose(): %s", s->index_new_fn);
+
+	if (fclose(s->plist_new_fp) == -1)
+		err(EX_IOERR, "fclose(): %s", s->plist_new_fn);
+
+	rm_olddir(s);
+
+	/* move current db out of the way */
+	if (rename(s->dir, s->olddir) == -1)
+		if (errno != ENOENT)
+			err(EX_CANTCREAT, "rename(): %s to %s", s->dir, s->olddir);
+
+	/* make new db current */
+	if (rename(s->newdir, s->dir) == -1)
+		err(EX_CANTCREAT, "rename(): %s to %s", s->newdir, s->dir);
+
+	rm_olddir(s);
 }
 
 void
@@ -236,26 +275,6 @@ s_add_pfile(struct store_t *s, const struct port_t *port, const char *file)
 		    port->id, FSp,
 		    file, RSp) == -1)
 		err(EX_IOERR, "fprintf(): %s", s->plist_new_fn);
-}
-
-void
-s_upd_end(struct store_t *s)
-{
-	if (fclose(s->index_new_fp) == -1)
-		err(EX_IOERR, "fclose(): %s", s->index_new_fn);
-
-	if (fclose(s->plist_new_fp) == -1)
-		err(EX_IOERR, "fclose(): %s", s->plist_new_fn);
-
-	if (rename(s->index_new_fn, s->index_fn) == -1)
-		err(EX_CANTCREAT, "rename(): %s to %s",
-		    s->index_new_fn, s->index_fn);
-
-	/* XXX if interrupted here database is left in inconsistent state */
-
-	if (rename(s->plist_new_fn, s->plist_fn) == -1)
-		err(EX_CANTCREAT, "rename(): %s to %s",
-		    s->plist_new_fn, s->plist_fn);
 }
 
 /***/
@@ -303,22 +322,27 @@ show_ports_by_pfile(const struct options_t *opts)
 /***/
 
 static void
-set_filenames(struct store_t *store)
+set_filenames(struct store_t *s)
 {
 	struct utsname	un;
-	char		scheme[PATH_MAX];
 
 	if (uname(&un) == -1)
 		err(EX_OSERR, "uname()");
 
-	snprintf(scheme, sizeof(scheme), "%s/%c-%s",
+	snprintf(s->dir, sizeof(s->dir), "%s/%c-%s",
 		 DBDIR, un.release[0], un.machine);
 
-	snprintf(store->index_fn, sizeof(store->index_fn), "%s-index", scheme);
-	snprintf(store->plist_fn, sizeof(store->plist_fn), "%s-plist", scheme);
+	snprintf(s->newdir, sizeof(s->newdir), "%s.new", s->dir);
+	snprintf(s->olddir, sizeof(s->olddir), "%s.old", s->dir);
 
-	snprintf(store->index_new_fn, sizeof(store->index_new_fn), "%s-index.new", scheme);
-	snprintf(store->plist_new_fn, sizeof(store->plist_new_fn), "%s-plist.new", scheme);
+	snprintf(s->index_fn, sizeof(s->index_fn), "%s/index", s->dir);
+	snprintf(s->plist_fn, sizeof(s->plist_fn), "%s/plist", s->dir);
+
+	snprintf(s->index_new_fn, sizeof(s->index_new_fn), "%s/index", s->newdir);
+	snprintf(s->plist_new_fn, sizeof(s->plist_new_fn), "%s/plist", s->newdir);
+
+	snprintf(s->index_old_fn, sizeof(s->index_old_fn), "%s/index", s->olddir);
+	snprintf(s->plist_old_fn, sizeof(s->plist_old_fn), "%s/plist", s->olddir);
 }
 
 static void
@@ -656,6 +680,22 @@ plines_cmp(const void *l1v, const void *l2v)
 	l2 = (struct pline_t *)l2v;
 
 	return l1->portid - l2->portid;
+}
+
+static void
+rm_olddir(const struct store_t *s)
+{
+	const char	*ents[] = {s->index_old_fn, s->plist_old_fn};
+	int		i;
+
+	for (i = 0; i < sizeof(ents) / sizeof(const char *); i++)
+		if (unlink(ents[i]) == -1)
+			if (errno != ENOENT)
+				err(EX_UNAVAILABLE, "unlink(): %s", ents[i]);
+
+	if (rmdir(s->olddir) == -1)
+		if (errno != ENOENT)
+			err(EX_UNAVAILABLE, "rmdir(): %s", s->olddir);
 }
 
 static void
