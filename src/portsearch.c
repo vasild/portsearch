@@ -36,7 +36,7 @@
 #include "portsearch.h"
 #include "store.h"
 
-static const char rcsid[] = "$Id: portsearch.c,v 1.3 2005/12/23 10:00:18 dd Exp $";
+static const char rcsid[] = "$Id: portsearch.c,v 1.4 2006/01/10 09:23:47 dd Exp $";
 
 /*
  * Print usage information end exit
@@ -74,7 +74,7 @@ usage()
 	prog = getprogname();
 
 	fprintf(stderr, "Usage:\n");
-	fprintf(stderr, "%s -u [-v]		(update/create database)\n", prog);
+	fprintf(stderr, "%s -u [-vvv]		(update/create database)\n", prog);
 	fprintf(stderr, "%s -f fileregexp	(show ports that install file)\n", prog);
 
 	exit(EX_USAGE);

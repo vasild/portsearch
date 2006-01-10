@@ -32,7 +32,7 @@
 
 #include "vector.h"
 
-static const char rcsid[] = "$Id: vector.c,v 1.1 2005/12/14 06:11:47 dd Exp $";
+static const char rcsid[] = "$Id: vector.c,v 1.2 2006/01/10 09:23:47 dd Exp $";
 
 void
 v_start(struct vector_t *v, size_t initial_sz)
@@ -77,6 +77,9 @@ v_destroy(struct vector_t *v)
 		free(v->base[i]);
 
 	free(v->base);
+
+	v->base = NULL;
+	v->base_sz = v->nelems = 0;
 }
 
 void

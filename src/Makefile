@@ -1,7 +1,7 @@
 #
 # Portsearch
 #
-# $Id: Makefile,v 1.4 2005/12/23 10:00:18 dd Exp $
+# $Id: Makefile,v 1.5 2006/01/10 09:23:47 dd Exp $
 #
 
 MKDEP?=	/usr/bin/mkdep
@@ -27,6 +27,7 @@ portsearch_objs=\
 	execcmd.o \
 	exhaust_fp.o \
 	get_port_mtime.o \
+	logmsg.o \
 	mkdb.o \
 	portsearch.o \
 	store_txt.o \

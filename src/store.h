@@ -32,35 +32,70 @@
 #include "portdef.h"
 #include "portsearch.h"
 
-struct store_t {
-	FILE	*index;
-	FILE	*plist;
-};
+struct store_t;
+
+/*
+ * *s = malloc(sizeof(struct store_t));
+ */
+void alloc_store(struct store_t **s);
+
+/*
+ * Free resources allocated by alloc_store()
+ */
+void free_store(struct store_t *s);
+
+/*
+ * Check if store exists. If `s' is a NULL pointer then check if default store
+ * exists. Returns 1 for existence, 0 otherwise.
+ */
+int s_exists(struct store_t *s);
 
 /* store manipulation procedures */
 
 /*
- * Initialize store for updating
+ * Initialize store for updating, independent of s_read_start()
  */
-void s_upd_start(struct store_t *store);
+void s_upd_start(struct store_t *s);
 
 /*
  * Add port to store
  */
-void s_add_port(struct store_t *store, const struct port_t *port);
+void s_add_port(struct store_t *s, const struct port_t *port);
 
 /*
  * Add plist file from port to store
  */
-void s_add_pfile(struct store_t *store, const struct port_t *port,
-		 const char *file);
+void s_add_pfile(struct store_t *s, const struct port_t *port, const char *file);
 
 /*
  * Close store from updating
  */
-void s_upd_end(struct store_t *store);
+void s_upd_end(struct store_t *s);
 
 /* store reading procedures */
+
+/*
+ * Initialize store for reading, independent of s_upd_start()
+ */
+void s_read_start(struct store_t *s);
+
+/*
+ * Close store, freeing resources allocated by s_read_start()
+ */
+void s_read_end(struct store_t *s);
+
+/*
+ * Retrieve port's data, fs_category and fs_port members
+ * of `port' must be set. If port is not found, then -1 is returned
+ * s_read_start() must have been called
+ */
+int s_load_port_by_path(struct store_t *s, struct port_t *port);
+
+/*
+ * Load port's plist
+ * id member of `port' must be set
+ */
+void s_load_port_plist(struct store_t *s, struct port_t *port);
 
 /*
  * Find and show all ports that install opts->search_file,

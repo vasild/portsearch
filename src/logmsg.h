@@ -24,17 +24,25 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef GET_PORT_MTIME_H
-#define GET_PORT_MTIME_H
+#ifndef LOGMSG_H
+#define LOGMSG_H
 
-#include "portdef.h"
+enum l_prio {
+	L_WARNING,
+	L_NOTICE,
+	L_INFO,
+	L_DEBUG
+};
 
 /*
- * Retrieve port's last modification time, fs_category and fs_port members
- * of `port' must be set
+ * Log message.
+ * Messages with priority L_WARNING are always logged,
+ * messages with priority L_NOTICE are logged when `verbose' is >0,
+ * messages with priority L_INFO are logged when `verbose' is >1,
+ * messages with priority L_DEBUG are logged when `verbose' is >2.
  */
-void get_port_mtime(struct port_t *port);
+void logmsg(enum l_prio priority, int verbose, const char *msg, ...);
 
-#endif  /* GET_PORT_MTIME_H */
+#endif  /* LOGMSG_H */
 
 /* EOF */

@@ -24,17 +24,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef GET_PORT_MTIME_H
-#define GET_PORT_MTIME_H
+#include <stdarg.h>
+#include <stdio.h>
 
-#include "portdef.h"
+#include "logmsg.h"
 
-/*
- * Retrieve port's last modification time, fs_category and fs_port members
- * of `port' must be set
- */
-void get_port_mtime(struct port_t *port);
+static const char rcsid[] = "$Id: logmsg.c,v 1.1 2006/01/10 09:23:47 dd Exp $";
 
-#endif  /* GET_PORT_MTIME_H */
+void
+logmsg(enum l_prio priority, int verbose, const char *msg, ...)
+{
+	va_list	ap;
+
+	va_start(ap, msg);
+
+	if (priority == L_WARNING ||
+	    (priority == L_NOTICE && verbose > 0) ||
+	    (priority == L_INFO && verbose > 1) ||
+	    (priority == L_DEBUG && verbose > 2))
+	{
+		vfprintf(stderr, msg, ap);
+		fflush(stderr);
+	}
+
+	va_end(ap);
+}
 
 /* EOF */
