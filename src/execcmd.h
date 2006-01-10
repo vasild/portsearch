@@ -29,7 +29,8 @@
 
 /*
  * Execute command `cmd' with execvp(3) and call `process' for each line
- * of output.
+ * of output. Line (process' first argument) is overwritten by
+ * subsequent calls and free()'d at the end.
  */
 void execcmd(const char *cmd, char *const args[],
 	     void (*process)(char *, void *), void *process_arg);
