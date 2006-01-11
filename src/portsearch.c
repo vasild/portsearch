@@ -39,7 +39,7 @@
 #include "portsearch.h"
 #include "store.h"
 
-static const char rcsid[] = "$Id: portsearch.c,v 1.5 2006/01/10 15:23:21 dd Exp $";
+static const char rcsid[] = "$Id: portsearch.c,v 1.6 2006/01/11 06:32:43 dd Exp $";
 
 /*
  * Get PORTSDIR from /etc/make.conf
@@ -83,7 +83,8 @@ static void
 set_portsdir(struct options_t *opts)
 {
 	char		*cmd = "make";
-	char *const	args[] = {cmd, "-C", "/", "-V", "PORTSDIR", NULL};
+	char *const	args[] = {cmd,  /* -f /dev/null suggested by "Matthew D. Fuller" <fullermd@over-yonder.net> */
+		"-f", "/dev/null", "-V", "PORTSDIR", NULL};
 
 	execcmd(cmd, args, _set_portsdir, opts);
 
