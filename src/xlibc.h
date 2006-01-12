@@ -24,8 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef XMALLOC_H
-#define XMALLOC_H
+#ifndef XLIBC_H
+#define XLIBC_H
 
 /*
  * Wrapper to malloc that calls err(3) if allocation fails
@@ -37,6 +37,6 @@ void *xmalloc(size_t sz);
  */
 void xfree(void *p);
 
-#endif  /* XMALLOC_H */
+#endif  /* XLIBC_H */
 
 /* EOF */

@@ -1,7 +1,7 @@
 #
 # Portsearch
 #
-# $Id: Makefile,v 1.6 2006/01/10 10:48:46 dd Exp $
+# $Id: Makefile,v 1.7 2006/01/12 15:56:09 dd Exp $
 #
 
 MKDEP?=	/usr/bin/mkdep
@@ -25,7 +25,7 @@ portsearch_objs=\
 	portsearch.o \
 	store_txt.o \
 	vector.o \
-	xmalloc.o
+	xlibc.o
 
 # vector
 vector_main_objs=\
