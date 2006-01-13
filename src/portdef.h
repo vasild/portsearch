@@ -31,6 +31,9 @@
 
 #include "vector.h"
 
+/* field separator in /usr/ports/INDEX */
+#define IDXFS	'|'
+
 struct port_t {
 	unsigned	id;  /* port unique number */
 	time_t		mtime;  /* last modification time */

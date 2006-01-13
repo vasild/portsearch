@@ -43,9 +43,7 @@
 #include "vector.h"
 #include "xlibc.h"
 
-#define IDXFS	'|'
-
-static const char rcsid[] = "$Id: mkdb.c,v 1.9 2006/01/13 10:11:28 dd Exp $";
+static const char rcsid[] = "$Id: mkdb.c,v 1.10 2006/01/13 11:47:51 dd Exp $";
 
 /* process_indexline parameter */
 struct pi_arg_t {
@@ -170,7 +168,7 @@ process_indexline(char *line, void *arg_void)
 	struct pi_arg_t	*arg = (struct pi_arg_t *)arg_void;
 	struct port_t	addport;
 
-	addport.indexln_raw = xstrdup(line);
+	addport.indexln_raw = line;
 
 	v_start(&addport.plist, 256);
 
@@ -193,8 +191,6 @@ process_indexline(char *line, void *arg_void)
 #endif
 
 	v_destroy(&addport.plist);
-
-	xfree(addport.indexln_raw);
 }
 
 static void

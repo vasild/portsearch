@@ -53,13 +53,12 @@
 
 #define RSi	'\n'  /* record separator for index file */
 #define FSi	'|'  /* field separator for index file */
-#define DFSi	'|'  /* ports INDEX separator */
 
 /* RSp must be '\n' because we use fgets */
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-static const char rcsid[] = "$Id: store_txt.c,v 1.9 2006/01/13 11:02:41 dd Exp $";
+static const char rcsid[] = "$Id: store_txt.c,v 1.10 2006/01/13 11:47:51 dd Exp $";
 
 struct pline_t {
 	unsigned	portid;
@@ -412,7 +411,7 @@ load_index(struct store_t *s)
 				break;
 			case 2:
 				/* repair after strsep */
-				*(fld + strlen(fld)) = '|';
+				*(fld + strlen(fld)) = FSi;
 				cur_port->indexln_raw = fld;
 				parse_indexln(cur_port);
 				break;
@@ -721,13 +720,13 @@ rm_olddir(const struct store_t *s)
 static void
 parse_indexln(struct port_t *port)
 {
-	char	dfs[2] = {DFSi, '\0'};
+	char	fs[2] = {IDXFS, '\0'};
 	char	*fld, *raw_p;
 	size_t	idx;
 
 	raw_p = port->indexln_raw;
 
-	for (idx = 0; ((fld = strsep(&raw_p, dfs)) != NULL); idx++)
+	for (idx = 0; ((fld = strsep(&raw_p, fs)) != NULL); idx++)
 		switch (idx)
 		{
 		case 0:
