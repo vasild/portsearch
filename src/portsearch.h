@@ -27,11 +27,16 @@
 #ifndef PORTSEARCH_H
 #define PORTSEARCH_H
 
+#define SEARCH_BY_PFILE	0x1
+#define SEARCH_BY_NAME	0x2
+
 struct options_t {
 	const char	*portsdir;
 	int		update_db;
 	int		verbose;
+	int		search_crit;
 	const char	*search_file;
+	const char	*search_name;
 };
 
 #endif  /* PORTSEARCH_H */

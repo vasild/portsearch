@@ -31,13 +31,12 @@
 #include "portsearch.h"
 #include "vector.h"
 
-#define ISSET(flag, flags)	(flags & flag)
+#define ISSET(a, b)	(a & b)
 
-static const char rcsid[] = "$Id: display.c,v 1.4 2006/01/13 11:49:16 dd Exp $";
+static const char rcsid[] = "$Id: display.c,v 1.5 2006/01/13 14:09:47 dd Exp $";
 
 void
-display_ports(const struct ports_t *ports, const struct options_t *opts,
-	      int flags)
+display_ports(const struct ports_t *ports, int search_crit)
 {
 	struct vector_iterator_t	vi;
 	struct port_t			*port;
@@ -47,7 +46,7 @@ display_ports(const struct ports_t *ports, const struct options_t *opts,
 	size_t				i;
 
 	for (ports_cnt = files_cnt = i = 0; i < ports->sz; i++)
-		if (ports->arr[i]->matched == 1 || ISSET(DISPLAY_ALL, flags))
+		if (ports->arr[i]->matched == search_crit)
 		{
 			ports_cnt++;
 
@@ -65,7 +64,7 @@ display_ports(const struct ports_t *ports, const struct options_t *opts,
 			printf("R-deps:\t%s\n", port->rdep);
 			printf("WWW:\t%s\n", port->www);
 
-			if (ISSET(DISPLAY_PFILES, flags))
+			if (ISSET(SEARCH_BY_PFILE, search_crit))
 			{
 				printf("Files:\t");
 				vi_reset(&vi, &ports->arr[i]->plist);
@@ -86,7 +85,7 @@ display_ports(const struct ports_t *ports, const struct options_t *opts,
 			printf("\n");
 		}
 	printf("%zu ports", ports_cnt);
-	if (ISSET(DISPLAY_PFILES, flags))
+	if (ISSET(SEARCH_BY_PFILE, search_crit))
 		printf(", %zu files", files_cnt);
 	printf("\n");
 }

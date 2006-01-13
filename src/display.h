@@ -30,11 +30,7 @@
 #include "portdef.h"
 #include "portsearch.h"
 
-#define DISPLAY_PFILES	0x1  /* Show plist files */
-#define DISPLAY_ALL	0x2  /* Show even ports marked as matched=0 */
-
-void display_ports(const struct ports_t *ports, const struct options_t *opts,
-		   int flags);
+void display_ports(const struct ports_t *ports, int search_crit);
 
 #endif  /* DISPLAY_H */
 

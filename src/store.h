@@ -50,6 +50,11 @@ void free_store(struct store_t *s);
  */
 int s_exists(struct store_t *s);
 
+/*
+ * Return internal `ports' structure
+ */
+struct ports_t *get_ports(struct store_t *s);
+
 /* store manipulation procedures */
 
 /*
@@ -71,6 +76,8 @@ void s_add_port(struct store_t *s, const struct port_t *port);
 
 /*
  * Initialize store for reading, independent of s_upd_start()
+ * Either this or s_search_start must be called
+ * Loads both index and plist files
  */
 void s_read_start(struct store_t *s);
 
@@ -78,6 +85,18 @@ void s_read_start(struct store_t *s);
  * Close store, freeing resources allocated by s_read_start()
  */
 void s_read_end(struct store_t *s);
+
+/*
+ * Initialize store for searching
+ * Either this or s_read_start must be called
+ * Loads only the index file
+ */
+void s_search_start(struct store_t *s);
+
+/*
+ * Close store, freeing resources allocated by s_search_start()
+ */
+void s_search_end(struct store_t *s);
 
 /*
  * Retrieve port's data from store, which has been s_read_start'ed
@@ -91,11 +110,19 @@ int s_load_port_by_path(struct store_t *s, struct port_t *port);
  */
 void s_load_port_plist(struct store_t *s, struct port_t *port);
 
+/* All searching is done based on extended regular expressions */
+
 /*
- * Find and show all ports that install opts->search_file,
- * display_ports() is used for showing the results
+ * Add SEARCH_BY_NAME to `matched' member of all ports named like
+ * `search_name'
  */
-void show_ports_by_pfile(const struct options_t *opts);
+void filter_ports_by_name(struct store_t *s, const char *search_name);
+
+/*
+ * Add SEARCH_BY_PFILE to `matched' member of all ports that have
+ * `search_file' in their plist
+ */
+void filter_ports_by_pfile(struct store_t *s, const char *search_file);
 
 #endif  /* STORE_H */
 

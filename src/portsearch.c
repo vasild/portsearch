@@ -33,13 +33,14 @@
 #include <sysexits.h>
 #include <unistd.h>
 
+#include "display.h"
 #include "execcmd.h"
 #include "mkdb.h"
 #include "portdef.h"
 #include "portsearch.h"
 #include "store.h"
 
-static const char rcsid[] = "$Id: portsearch.c,v 1.7 2006/01/13 07:47:53 dd Exp $";
+static const char rcsid[] = "$Id: portsearch.c,v 1.8 2006/01/13 14:09:47 dd Exp $";
 
 /*
  * Retrieve PORTSDIR using make -V PORTSDIR
@@ -64,6 +65,7 @@ int
 main(int argc, char **argv)
 {
 	struct options_t	opts;
+	struct store_t		*store;
 
 	memset(&opts, 0, sizeof(opts));
 
@@ -73,8 +75,27 @@ main(int argc, char **argv)
 
 	if (opts.update_db)
 		mkdb(&opts);
-	else if (opts.search_file)
-		show_ports_by_pfile(&opts);
+	else if (opts.search_crit)
+	{
+		if (!s_exists(NULL))
+			errx(EX_USAGE, "Database does not exist, please create it first using the -u option");
+
+		alloc_store(&store);
+
+		s_search_start(store);
+
+		if (opts.search_crit & SEARCH_BY_PFILE)
+			filter_ports_by_pfile(store, opts.search_file);
+
+		if (opts.search_crit & SEARCH_BY_NAME)
+			filter_ports_by_name(store, opts.search_name);
+
+		display_ports(get_ports(store), opts.search_crit);
+
+		s_search_end(store);
+
+		free_store(store);
+	}
 
 	return 0;
 }
@@ -123,11 +144,16 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 {
 	int	ch;
 
-	while ((ch = getopt(argc, argv, "f:p:uvh")) != -1)
+	while ((ch = getopt(argc, argv, "f:n:p:uvh")) != -1)
 		switch (ch)
 		{
 		case 'f':
+			opts->search_crit |= SEARCH_BY_PFILE;
 			opts->search_file = optarg;
+			break;
+		case 'n':
+			opts->search_crit |= SEARCH_BY_NAME;
+			opts->search_name = optarg;
 			break;
 		case 'p':  /* or 'd'irectory or 'r'oot */
 			opts->portsdir = optarg;
@@ -150,10 +176,10 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 	if (argc > 0)
 		usage();
 
-	if (!opts->update_db && !opts->search_file)
+	if (!opts->update_db && !opts->search_crit)
 		usage();
 
-	if (opts->update_db && opts->search_file)
+	if (opts->update_db && opts->search_crit)
 		usage();
 }
 

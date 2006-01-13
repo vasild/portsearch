@@ -53,7 +53,7 @@ struct port_t {
 	char		*rdep;
 	char		*www;
 	struct vector_t	plist;  /* plist files */
-	int		matched;  /* matched by some search criteria */
+	int		matched;  /* logical OR'd SEARCH_BY_* */
 };
 
 struct ports_t {

@@ -58,7 +58,7 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-static const char rcsid[] = "$Id: store_txt.c,v 1.10 2006/01/13 11:47:51 dd Exp $";
+static const char rcsid[] = "$Id: store_txt.c,v 1.11 2006/01/13 14:09:47 dd Exp $";
 
 struct pline_t {
 	unsigned	portid;
@@ -96,7 +96,7 @@ struct store_t {
 /* gather_pfiles argument */
 struct garg_t {
 	regex_t		re;
-	struct store_t	store;
+	struct store_t	*store;
 };
 
 /*
@@ -217,6 +217,12 @@ s_exists(struct store_t *s)
 	return 1;
 }
 
+struct ports_t *
+get_ports(struct store_t *s)
+{
+	return &s->ports;
+}
+
 void
 s_upd_start(struct store_t *s)
 {
@@ -312,31 +318,56 @@ s_read_end(struct store_t *s)
 }
 
 void
-show_ports_by_pfile(const struct options_t *opts)
+s_search_start(struct store_t *s)
 {
+	set_filenames(s);
+
+	load_index(s);
+}
+
+void
+s_search_end(struct store_t *s)
+{
+	free_index(s);
+}
+
+void
+filter_ports_by_name(struct store_t *s, const char *search_name)
+{
+	struct port_t	*cur_port;
+	regex_t		re;
+	size_t		i;
+
+	xregcomp(&re, search_name, REG_EXTENDED | REG_NOSUB);
+
+	for (i = 0; i < s->ports.sz; i++)
+		if (s->ports.arr[i] != NULL)
+		{
+			cur_port = s->ports.arr[i];
+			if (regexec(&re, cur_port->pkgname, 0, NULL, 0) == 0)
+				cur_port->matched |= SEARCH_BY_NAME;
+		}
+
+	xregfree(&re);
+}
+
+void
+filter_ports_by_pfile(struct store_t *s, const char *search_file)
+{
+	FILE		*plist_fp;
 	struct garg_t	garg;
 
-	if (!s_exists(NULL))
-		errx(EX_USAGE, "Database does not exist, "
-		     "please create it first using the -u option");
+	garg.store = s;
 
-	set_filenames(&garg.store);
-	
-	load_index(&garg.store);
+	xregcomp(&garg.re, search_file, REG_EXTENDED | REG_NOSUB);
 
-	xregcomp(&garg.re, opts->search_file, REG_EXTENDED | REG_NOSUB);
+	plist_fp = xfopen(s->plist_fn, "r");
 
-	garg.store.plist_fp = xfopen(garg.store.plist_fn, "r");
+	exhaust_fp(plist_fp, gather_pfiles, &garg);
 
-	exhaust_fp(garg.store.plist_fp, gather_pfiles, &garg);
-
-	xfclose(garg.store.plist_fp, garg.store.plist_fn);
+	xfclose(plist_fp, s->plist_fn);
 
 	xregfree(&garg.re);
-
-	display_ports(&garg.store.ports, opts, DISPLAY_PFILES);
-
-	free_index(&garg.store);
 }
 
 /***/
@@ -508,7 +539,7 @@ gather_pfiles(char *line, void *arg_void)
 	if ((FSp_pos = strchr(line, FSp)) == NULL)
 		errx(EX_DATAERR, "corrupted datafile: %s: "
 		     "``%c'' not found on line %u",
-		     arg->store.plist_fn, FSp, line_num);
+		     arg->store->plist_fn, FSp, line_num);
 
 	if (regexec(&arg->re, FSp_pos + 1, 0, NULL, 0) != 0)
 		return;
@@ -520,12 +551,12 @@ gather_pfiles(char *line, void *arg_void)
 	FSp_pos[0] = '\0';
 	portid = line;
 
-	get_port_by_id(&arg->store.ports, portid, &port);
+	get_port_by_id(&arg->store->ports, portid, &port);
 
-	if (port->matched == 0)
+	if ((port->matched & SEARCH_BY_PFILE) == 0)
 		v_start(&port->plist, 2);
 
-	port->matched = 1;
+	port->matched |= SEARCH_BY_PFILE;
 
 	v_add(&port->plist, filename, strlen(filename) + 1);
 }
