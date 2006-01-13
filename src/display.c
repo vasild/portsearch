@@ -33,7 +33,7 @@
 
 #define ISSET(flag, flags)	(flags & flag)
 
-static const char rcsid[] = "$Id: display.c,v 1.3 2006/01/13 10:11:28 dd Exp $";
+static const char rcsid[] = "$Id: display.c,v 1.4 2006/01/13 11:49:16 dd Exp $";
 
 void
 display_ports(const struct ports_t *ports, const struct options_t *opts,
@@ -58,11 +58,11 @@ display_ports(const struct ports_t *ports, const struct options_t *opts,
 			printf("Info:\t%s\n", port->comment);
 			printf("Maint:\t%s\n", port->maint);
 			printf("Mtime:\t%s", ctime(&port->mtime));
-			//printf("E-deps:\t%s\n", port->edeps);
-			//printf("P-deps:\t%s\n", port->pdeps);
-			//printf("F-deps:\t%s\n", port->fdeps);
-			//printf("B-deps:\t%s\n", port->bdeps);
-			//printf("R-deps:\t%s\n", port->rdeps);
+			//printf("E-deps:\t%s\n", port->edep);
+			//printf("P-deps:\t%s\n", port->pdep);
+			//printf("F-deps:\t%s\n", port->fdep);
+			printf("B-deps:\t%s\n", port->bdep);
+			printf("R-deps:\t%s\n", port->rdep);
 			printf("WWW:\t%s\n", port->www);
 
 			if (ISSET(DISPLAY_PFILES, flags))
