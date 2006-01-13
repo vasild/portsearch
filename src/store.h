@@ -67,11 +67,6 @@ void s_upd_end(struct store_t *s);
  */
 void s_add_port(struct store_t *s, const struct port_t *port);
 
-/*
- * Add plist file from port to store
- */
-void s_add_pfile(struct store_t *s, const struct port_t *port, const char *file);
-
 /* store reading procedures */
 
 /*

@@ -31,18 +31,33 @@
 
 #include "vector.h"
 
-struct port_t {
-	unsigned	id;  /* port number */
-	int		matched;  /* matched by some search criteria */
-	char		*fs_category;  /* filesystem category's dir name */
-	char		*fs_port;  /* filesystem port's dir name */
-	time_t		mtime;  /* last modification time */
-	struct vector_t	plist;  /* plist files */
+struct port_descr_t {
+	char	*raw;
+	char	*pkgname;
+	char	path[128];
+	char	*prefix;
+	char	*comment;
+	char	*pkgdescr;
+	char	*maint;
+	char	*categories;
+	char	*fdep;
+	char	*edep;
+	char	*pdep;
+	char	*bdep;
+	char	*rdep;
+	char	*www;
 };
 
-/* there may be NULL pointers in arr */
+struct port_t {
+	unsigned		id;  /* port number */
+	time_t			mtime;  /* last modification time */
+	struct port_descr_t	descr;  /* data from INDEX file */
+	struct vector_t		plist;  /* plist files */
+	int			matched;  /* matched by some search criteria */
+};
+
 struct ports_t {
-	struct port_t	**arr;  /* ports' array */
+	struct port_t	**arr;  /* ports' array, there may be NULL pointers in it */
 	size_t		sz;  /* number of allocated elements in arr */
 };
 

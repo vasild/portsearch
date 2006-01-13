@@ -34,32 +34,46 @@
 #include <sysexits.h>
 
 #include "execcmd.h"
+#include "exhaust_fp.h"
 #include "logmsg.h"
 #include "mkdb.h"
 #include "portdef.h"
 #include "portsearch.h"
 #include "store.h"
 #include "vector.h"
+#include "xlibc.h"
 
-static const char rcsid[] = "$Id: mkdb.c,v 1.7 2006/01/10 15:23:21 dd Exp $";
+#define IDXFS	'|'
+
+static const char rcsid[] = "$Id: mkdb.c,v 1.8 2006/01/13 07:47:53 dd Exp $";
 
 struct pc_arg_t {
 	const struct options_t	*opts;
 	struct store_t		*store;
 	int			s_exists;
-	unsigned		ports_cnt;
 	char			*category;
 };
 
-/*
- * Process all categories, contained in `line' (space-separated)
- */
-static void process_categories(char *line, void *arg);
+static char	indexfile[PATH_MAX];
 
 /*
- * Process all ports, contained in `line' (space-separated)
+ * Set index's filename using make -V INDEXFILE
  */
-static void process_ports_in_cat(char *line, void *arg);
+static void set_indexfile(const char *portsdir);
+static void _set_indexfile(char *line, void *arg);
+
+/*
+ * Process ports' INDEX file
+ */
+static void process_indexline(char *line, void *arg_void);
+
+static void set_port_path(struct port_t *port);
+
+/*
+ * Set port's description and plist, either generate them or retrieve them
+ * from the old database (if one exists and port has not been modified recently)
+ */
+static void set_port_data(struct port_t *port, const struct pc_arg_t *arg);
 
 /*
  * Create the packing list for a given port using make generate-plist
@@ -75,7 +89,7 @@ static void process_plist(char *line, void *arg);
  * Retrieve port's last modification time, fs_category and fs_port members
  * of `port' must be set
  */
-static void get_port_mtime(const char *portsdir, struct port_t *port);
+static void set_port_mtime(const char *portsdir, struct port_t *port);
 
 /***/
 
@@ -83,9 +97,11 @@ void
 mkdb(const struct options_t *opts)
 {
 	struct pc_arg_t	arg;
+	FILE		*indexfile_fp;
 
 	arg.opts = opts;
-	arg.ports_cnt = 1;
+
+	set_indexfile(opts->portsdir);
 
 	logmsg(L_NOTICE, opts->verbose, "Creating database\n");
 
@@ -93,27 +109,19 @@ mkdb(const struct options_t *opts)
 
 	if ((arg.s_exists = s_exists(NULL)))
 	{
-		logmsg(L_INFO, opts->verbose,
-		       "Using data from existent database\n");
+		logmsg(L_INFO, opts->verbose, "Using data from existent database\n");
 		s_read_start(arg.store);
 	}
 	else
-		logmsg(L_INFO, opts->verbose,
-		       "Previous database does not exist, creating from scratch\n");
+		logmsg(L_INFO, opts->verbose, "Previous database does not exist, creating from scratch\n");
 
 	s_upd_start(arg.store);
 
-#if 1
-	char		*cmd = "make";
-	char *const	args[] = {cmd,
-		"-C", (char *)opts->portsdir, "-V", "SUBDIR", NULL};
+	indexfile_fp = xfopen(indexfile, "r");
 
-	execcmd(cmd, args, process_categories, &arg);
-#else
-	char	categories[] = "archivers";
+	exhaust_fp(indexfile_fp, process_indexline, &arg);
 
-	process_categories(categories, &arg);
-#endif
+	xfclose(indexfile_fp, indexfile);
 
 	s_upd_end(arg.store);
 
@@ -124,137 +132,142 @@ mkdb(const struct options_t *opts)
 }
 
 static void
-process_categories(char *line, void *arg_void)
+set_indexfile(const char *portsdir)
 {
-	struct pc_arg_t	*arg = (struct pc_arg_t *)arg_void;
-
-	char		path[PATH_MAX];
-
 	char		*cmd = "make";
-	char *const	args[] = {cmd, "-C", path, "-V", "SUBDIR", NULL};
+	char *const	args[] = {cmd,
+		"-C", (char *)portsdir, "-V", "INDEXFILE", NULL};
 
-	while ((arg->category = strsep((char **)&line, " ")) != NULL)
-	{
-		logmsg(L_NOTICE, arg->opts->verbose, "Processing category %s\n",
-		       arg->category);
-
-		snprintf(path, sizeof(path), "%s/%s",
-			 arg->opts->portsdir, arg->category);
-
-		execcmd(cmd, args, process_ports_in_cat, arg);
-	}
+	execcmd(cmd, args, _set_indexfile, (void *)portsdir);
 }
 
 static void
-process_ports_in_cat(char *line, void *arg_void)
+_set_indexfile(char *line, void *arg)
 {
-	struct pc_arg_t			*arg = (struct pc_arg_t *)arg_void;
-	struct port_t			port;
-	struct vector_iterator_t	vi;
-	char				*file;
+	snprintf(indexfile, sizeof(indexfile), "%s/%s", (char *)arg, line);
+}
 
-	port.fs_category = arg->category;
+static void
+process_indexline(char *line, void *arg_void)
+{
+	struct pc_arg_t	*arg = (struct pc_arg_t *)arg_void;
+	struct port_t	addport;
 
-	while ((port.fs_port = strsep((char **)&line, " ")) != NULL)
+	addport.descr.raw = xstrdup(line);
+
+	v_start(&addport.plist, 256);
+
+	set_port_path(&addport);
+
+#define SHORT	1
+
+#if SHORT
+	if (strncmp("/usr/ports/archivers", addport.descr.path, 20) == 0)
 	{
-		logmsg(L_INFO, arg->opts->verbose, "Processing port %s/%s\n",
-		       port.fs_category, port.fs_port);
+#endif
+	logmsg(L_INFO, arg->opts->verbose, "==> %s\n", addport.descr.path);
 
-		get_port_mtime(arg->opts->portsdir, &port);
+	set_port_data(&addport, arg);
 
-		v_start(&port.plist, 256);
-
-		mkplist(&port, arg);
-
-		port.id = arg->ports_cnt;
-
-		vi_reset(&vi, &port.plist);
-
-		while (vi_next(&vi, (void **)&file))
-			s_add_pfile(arg->store, &port, file);
-
-		v_destroy(&port.plist);
-
-		s_add_port(arg->store, &port);
-
-		arg->ports_cnt++;
+	s_add_port(arg->store, &addport);
+#if SHORT
 	}
+#endif
+
+	v_destroy(&addport.plist);
+
+	xfree(addport.descr.raw);
+}
+
+static void
+set_port_path(struct port_t *port)
+{
+	char	*path_beg;
+	char	*path_end;
+
+	path_beg = xstrchr(port->descr.raw, IDXFS) + 1;
+	path_end = xstrchr(path_beg, IDXFS);
+
+	path_end[0] = '\0';
+
+	snprintf(port->descr.path, sizeof(port->descr.path), "%s", path_beg);
+
+	path_end[0] = IDXFS;
+}
+
+static void
+set_port_data(struct port_t *port, const struct pc_arg_t *arg)
+{
+	static unsigned	portid = 1;
+
+	struct port_t	s_port;
+	int		gen_plist;
+
+	set_port_mtime(arg->opts->portsdir, port);
+
+	if (arg->s_exists)
+	{
+		snprintf(s_port.descr.path, sizeof(s_port.descr.path),
+			 "%s", port->descr.path);
+
+		if (s_load_port_by_path(arg->store, &s_port) != -1)
+		{
+			logmsg(L_DEBUG, arg->opts->verbose, "%s database mtime:   %s", s_port.descr.path, ctime(&s_port.mtime));
+			logmsg(L_DEBUG, arg->opts->verbose, "%s filesystem mtime: %s", port->descr.path, ctime(&port->mtime));
+
+			if (port->mtime > s_port.mtime)
+			{
+				logmsg(L_INFO, arg->opts->verbose, "%s database outdated, recreating data\n", port->descr.path);
+				gen_plist = 1;
+			}
+			else
+			{
+				logmsg(L_INFO, arg->opts->verbose, "%s using stored data\n", port->descr.path);
+				gen_plist = 0;
+			}
+		}
+		else
+		{
+			logmsg(L_INFO, arg->opts->verbose, "%s not found in database, recreating data\n", port->descr.path);
+			gen_plist = 1;
+		}
+
+	}
+	else  /* store does not exist */
+		gen_plist = 1;
+
+	if (gen_plist)
+	{
+		mkplist(port, arg);
+	}
+	else
+	{
+		port->id = s_port.id;  /* temporary set to the old id */
+		s_load_port_plist(arg->store, port);
+	}
+
+	port->id = portid;
+
+	portid++;
 }
 
 static void
 mkplist(struct port_t *port, const struct pc_arg_t *arg)
 {
-	struct port_t	s_port;
-	int		create_plist;
-	char		portdir[PATH_MAX];
 	char		arg_PORTDIR[PATH_MAX];
 	char		arg_I[PATH_MAX];
 	char		*cmd = "make";
 	char *const	args[] = {cmd,
 		"-C", "../Mk", arg_I, arg_PORTDIR, "show-plist", NULL};
 
-	if (arg->s_exists)
-	{
-		s_port.fs_category = port->fs_category;
-		s_port.fs_port = port->fs_port;
+	/* math/vecfem (and maybe others) does ``.include <Makefile.inc>''
+	 * to include /usr/ports/math/vecfem/Makefile.inc and therefore
+	 * needs -I */
+	snprintf(arg_I, sizeof(arg_I), "-I%s", port->descr.path);
+	snprintf(arg_PORTDIR, sizeof(arg_PORTDIR), "PORTDIR=%s",
+		 port->descr.path);
 
-		if (s_load_port_by_path(arg->store, &s_port) != -1)
-		{
-			logmsg(L_DEBUG, arg->opts->verbose,
-			       "%s/%s database mtime:   %s",
-			       port->fs_category, port->fs_port,
-			       ctime(&s_port.mtime));
-
-			logmsg(L_DEBUG, arg->opts->verbose,
-			       "%s/%s filesystem mtime: %s",
-			       port->fs_category, port->fs_port,
-			       ctime(&port->mtime));
-
-			if (port->mtime > s_port.mtime)
-			{
-				logmsg(L_INFO, arg->opts->verbose,
-				       "%s/%s database outdated, recreating plist\n",
-				       port->fs_category, port->fs_port);
-				create_plist = 1;
-			}
-			else
-			{
-				logmsg(L_INFO, arg->opts->verbose,
-				       "%s/%s using stored data\n",
-				       port->fs_category, port->fs_port);
-				create_plist = 0;
-			}
-		}
-		else
-		{
-			logmsg(L_INFO, arg->opts->verbose,
-			       "%s/%s not found in database, recreating plist\n",
-			       port->fs_category, port->fs_port);
-			create_plist = 1;
-		}
-
-	}
-	else
-		create_plist = 1;
-
-	if (create_plist)
-	{
-		snprintf(portdir, sizeof(portdir), "%s/%s/%s",
-			 arg->opts->portsdir, port->fs_category, port->fs_port);
-
-		/* math/vecfem (and maybe others) does ``.include <Makefile.inc>''
-		 * to include /usr/ports/math/vecfem/Makefile.inc and therefore
-		 * needs -I */
-		snprintf(arg_I, sizeof(arg_I), "-I%s", portdir);
-		snprintf(arg_PORTDIR, sizeof(arg_PORTDIR), "PORTDIR=%s", portdir);
-
-		execcmd(cmd, args, process_plist, port);
-	}
-	else
-	{
-		port->id = s_port.id;
-		s_load_port_plist(arg->store, port);
-	}
+	execcmd(cmd, args, process_plist, port);
 }
 
 static void
@@ -267,13 +280,12 @@ process_plist(char *line, void *arg)
 }
 
 static void
-get_port_mtime(const char *portsdir, struct port_t *port)
+set_port_mtime(const char *portsdir, struct port_t *port)
 {
 	char		path[PATH_MAX];
 	struct stat	sb;
 
-	snprintf(path, sizeof(path), "%s/%s/%s/Makefile",
-		 portsdir, port->fs_category, port->fs_port);
+	snprintf(path, sizeof(path), "%s/Makefile", port->descr.path);
 
 	if (stat(path, &sb) == -1)
 		err(EX_OSERR, "stat(): %s", path);

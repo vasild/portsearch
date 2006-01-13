@@ -24,18 +24,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Wrapper functions that call err(3) when something fails
+ */
+
 #ifndef XLIBC_H
 #define XLIBC_H
 
-/*
- * Wrapper to malloc that calls err(3) if allocation fails
- */
-void *xmalloc(size_t sz);
+#include <stdio.h>
+#include <regex.h>
 
-/*
- * Call free(3)
- */
-void xfree(void *p);
+void *xmalloc(size_t size);
+void xfree(void *ptr);
+
+FILE *xfopen(const char *path, const char *mode);
+void xfclose(FILE *stream, const char *filename);
+
+char *xstrchr(const char *s, int c);
+char *xstrdup(const char *str);
+
+void xregcomp(regex_t *preg, const char *pattern, int cflags);
+void xregfree(regex_t *preg);
 
 #endif  /* XLIBC_H */
 

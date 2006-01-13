@@ -25,25 +25,90 @@
  */
 
 #include <err.h>
+#include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sysexits.h>
 
+#include "xlibc.h"
+
 void *
-xmalloc(size_t sz)
+xmalloc(size_t size)
 {
-	void	*p;
+	void	*ptr;
 
-	if ((p = malloc(sz)) == NULL)
-		err(EX_OSERR, "malloc(): %zu", sz);
+	if ((ptr = malloc(size)) == NULL)
+		err(EX_OSERR, "malloc(): %zu", size);
 
-	return p;
+	return ptr;
 }
 
 void
-xfree(void *p)
+xfree(void *ptr)
 {
-	free(p);
+	free(ptr);
+}
+
+FILE *
+xfopen(const char *path, const char *mode)
+{
+	FILE	*fp;
+
+	if ((fp = fopen(path, mode)) == NULL)
+		err(EX_NOINPUT, "fopen(): %s", path);
+
+	return fp;
+}
+
+void
+xfclose(FILE *stream, const char *filename)
+{
+	if (fclose(stream) == -1)
+		err(EX_IOERR, "fclose()%s%s",
+		    filename == NULL ? "" : ": ",
+		    filename == NULL ? "" : filename);
+}
+
+char *
+xstrchr(const char *s, int c)
+{
+	char	*ret;
+
+	if ((ret = strchr(s, c)) == NULL)
+		err(EX_DATAERR, "strchr(): cannot locate %c in %s", c, s);
+
+	return ret;
+}
+
+char *
+xstrdup(const char *str)
+{
+	char	*ret;
+
+	if ((ret = strdup(str)) == NULL)
+		err(EX_OSERR, "strdup(): %s", str);
+
+	return ret;
+}
+
+void
+xregcomp(regex_t *preg, const char *pattern, int cflags)
+{
+	int	comp_err;
+	char	comp_errstr[BUFSIZ];  /* BUFSIZ should be quite enough */
+
+	if ((comp_err = regcomp(preg, pattern, cflags)) != 0)
+	{
+		regerror(comp_err, preg, comp_errstr, sizeof(comp_errstr));
+		errx(EX_DATAERR, "\"%s\": %s", pattern, comp_errstr);
+	}
+}
+
+void
+xregfree(regex_t *preg)
+{
+	regfree(preg);
 }
 
 /* EOF */

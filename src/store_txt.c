@@ -47,18 +47,19 @@
 #include "portdef.h"
 #include "store.h"
 #include "vector.h"
-#include "xmalloc.h"
+#include "xlibc.h"
 
 #define DBDIR	"/var/db/portsearch"
 
 #define RSi	'\n'  /* record separator for index file */
 #define FSi	'|'  /* field separator for index file */
+#define DFSi	'|'  /* `make describe' separator */
 
 /* RSp must be '\n' because we use fgets */
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-static const char rcsid[] = "$Id: store_txt.c,v 1.6 2006/01/10 15:22:44 dd Exp $";
+static const char rcsid[] = "$Id: store_txt.c,v 1.7 2006/01/13 07:47:53 dd Exp $";
 
 struct pline_t {
 	unsigned	portid;
@@ -115,12 +116,23 @@ static void load_file(const char *filename, char **raw);
 static void free_file(char *raw);
 
 /*
+ * Add port's plist to store
+ */
+static void add_port_plist(struct store_t *s, const struct port_t *port);
+
+/*
+ * Add port's basic data to store
+ */
+static void add_port_index(struct store_t *s, const struct port_t *port);
+
+/*
  * Place plist files that match `arg->re' in the appropriate `plist'
  * members of the `arg->ports' structure
  */
 static void gather_pfiles(char *line, void *arg);
 
 /*
+ * Retrieve port by its id, exit if port is not found
  */
 static void get_port_by_id(struct ports_t *ports, const char *portid,
 			   struct port_t **port);
@@ -138,12 +150,12 @@ static int ports_cmp(const void *p1v, const void *p2v);
 /*
  * Load whole index file (all ports) from disk
  */
-static void load_ports(struct store_t *s);
+static void load_index(struct store_t *s);
 
 /*
- * Free data allocated by load_ports()
+ * Free data allocated by load_index()
  */
-static void free_ports(struct store_t *s);
+static void free_index(struct store_t *s);
 
 /*
  * Load whole plist file from disk
@@ -161,19 +173,14 @@ static void free_plist(struct store_t *s);
 static int plines_cmp(const void *l1v, const void *l2v);
 
 /*
- * Remove old db dir
+ * Remove old database directory
  */
 static void rm_olddir(const struct store_t *s);
 
 /*
- * Compile the regular expression, exit on error
+ * Parse `make describe' output
  */
-static void xregcomp(const char *restr, regex_t *re);
-
-/*
- * Open file and exit on failure
- */
-static void xfopen(FILE **fp, const char *filename, const char *mode);
+static void parse_descr(struct port_descr_t *descr);
 
 /***/
 
@@ -235,11 +242,9 @@ void
 s_upd_end(struct store_t *s)
 {
 	/* close newly created db files */
-	if (fclose(s->index_new_fp) == -1)
-		err(EX_IOERR, "fclose(): %s", s->index_new_fn);
+	xfclose(s->index_new_fp, s->index_new_fn);
 
-	if (fclose(s->plist_new_fp) == -1)
-		err(EX_IOERR, "fclose(): %s", s->plist_new_fn);
+	xfclose(s->plist_new_fp, s->plist_new_fn);
 
 	rm_olddir(s);
 
@@ -258,23 +263,35 @@ s_upd_end(struct store_t *s)
 void
 s_add_port(struct store_t *s, const struct port_t *port)
 {
-	if (fprintf(s->index_new_fp,
-		    "%u%c""%s%c""%s%c""%u%c",
-		    port->id, FSi,
-		    port->fs_category, FSi,
-		    port->fs_port, FSi,
-		    (unsigned)port->mtime, RSi) == -1)
-		err(EX_IOERR, "fprintf(): %s", s->index_new_fn);
+	add_port_plist(s, port);
+	add_port_index(s, port);
 }
 
-void
-s_add_pfile(struct store_t *s, const struct port_t *port, const char *file)
+static void
+add_port_plist(struct store_t *s, const struct port_t *port)
 {
-	if (fprintf(s->plist_new_fp,
-		    "%u%c""%s%c",
-		    port->id, FSp,
-		    file, RSp) == -1)
-		err(EX_IOERR, "fprintf(): %s", s->plist_new_fn);
+	struct vector_iterator_t	vi;
+	char				*file;
+
+	vi_reset(&vi, &port->plist);
+
+	while (vi_next(&vi, (void **)&file))
+		if (fprintf(s->plist_new_fp,
+			    "%u%c""%s%c",
+			    port->id, FSp,
+			    file, RSp) == -1)
+			err(EX_IOERR, "fprintf(): %s", s->plist_new_fn);
+}
+
+static void
+add_port_index(struct store_t *s, const struct port_t *port)
+{
+	if (fprintf(s->index_new_fp,
+		    "%u%c""%u%c""%s%c",
+		    port->id, FSi,
+		    (unsigned)port->mtime, FSi,
+		    port->descr.raw, RSi) == -1)
+		err(EX_IOERR, "fprintf(): %s", s->index_new_fn);
 }
 
 /***/
@@ -284,15 +301,15 @@ s_read_start(struct store_t *s)
 {
 	set_filenames(s);
 
-	load_ports(s);
+	load_index(s);
 	load_plist(s);
 }
 
 void
 s_read_end(struct store_t *s)
 {
-	free_ports(s);
 	free_plist(s);
+	free_index(s);
 }
 
 void
@@ -306,21 +323,21 @@ show_ports_by_pfile(const struct options_t *opts)
 
 	set_filenames(&garg.store);
 	
-	load_ports(&garg.store);
+	load_index(&garg.store);
 
-	xregcomp(opts->search_file, &garg.re);
+	xregcomp(&garg.re, opts->search_file, REG_EXTENDED | REG_NOSUB);
 
-	xfopen(&garg.store.plist_fp, garg.store.plist_fn, "r");
+	garg.store.plist_fp = xfopen(garg.store.plist_fn, "r");
 
 	exhaust_fp(garg.store.plist_fp, gather_pfiles, &garg);
 
-	fclose(garg.store.plist_fp);
+	xfclose(garg.store.plist_fp, garg.store.plist_fn);
 
-	regfree(&garg.re);
+	xregfree(&garg.re);
 
 	display_ports(&garg.store.ports, opts, DISPLAY_PFILES);
 
-	free_ports(&garg.store);
+	free_index(&garg.store);
 }
 
 /***/
@@ -350,7 +367,7 @@ set_filenames(struct store_t *s)
 }
 
 static void
-load_ports(struct store_t *s)
+load_index(struct store_t *s)
 {
 	char		rs[2] = {RSi, '\0'};
 	char		fs[2] = {FSi, '\0'};
@@ -381,21 +398,23 @@ load_ports(struct store_t *s)
 
 		cur_port->matched = 0;
 
-		for (fld_idx = 0; (fld = strsep(&rec, fs)) != NULL; fld_idx++)
+		for (fld_idx = 0; fld_idx <= 2; fld_idx++)
 		{
+			fld = strsep(&rec, fs);
+
 			switch (fld_idx)
 			{
 			case 0:
 				cur_port->id = (unsigned)strtoul(fld, NULL, 10);
 				break;
 			case 1:
-				cur_port->fs_category = fld;
+				cur_port->mtime = (time_t)strtoul(fld, NULL,10);
 				break;
 			case 2:
-				cur_port->fs_port = fld;
-				break;
-			case 3:
-				cur_port->mtime = (time_t)strtoul(fld, NULL,10);
+				/* repair after strsep */
+				*(fld + strlen(fld)) = '|';
+				cur_port->descr.raw = fld;
+				parse_descr(&cur_port->descr);
 				break;
 			default:
 				assert(0 && "The impossible happened, committing suicide");
@@ -412,7 +431,7 @@ load_ports(struct store_t *s)
 }
 
 static void
-free_ports(struct store_t *s)
+free_index(struct store_t *s)
 {
 	size_t	i;
 
@@ -442,8 +461,7 @@ load_file(const char *filename, char **raw)
 
 	sz = sb.st_size;
 
-	if ((*raw = (char *)malloc(sz + 1)) == NULL)
-		err(EX_OSERR, "malloc(): %zu", sz);
+	*raw = (char *)xmalloc(sz + 1);
 
 	offt = 0;
 
@@ -576,13 +594,11 @@ s_load_port_by_path(struct store_t *s, struct port_t *port)
 		if (s->ports.arr[i] == NULL)
 			continue;
 
-		if (strcmp(s->ports.arr[i]->fs_category,
-			   port->fs_category) == 0 &&
-		    strcmp(s->ports.arr[i]->fs_port,
-			   port->fs_port) == 0)
+		if (strcmp(s->ports.arr[i]->descr.path, port->descr.path) == 0)
 		{
 			port->id = s->ports.arr[i]->id;
 			port->mtime = s->ports.arr[i]->mtime;
+			port->descr.raw = s->ports.arr[i]->descr.raw;
 			return 0;
 		}
 	}
@@ -703,23 +719,65 @@ rm_olddir(const struct store_t *s)
 }
 
 static void
-xregcomp(const char *restr, regex_t *re)
+parse_descr(struct port_descr_t *descr)
 {
-	int	comp_err;
-	char	comp_errstr[BUFSIZ];  /* BUFSIZ should be quite enough */
+	char	dfs[2] = {DFSi, '\0'};
+	char	*fld, *raw_p;
+	size_t	idx;
 
-	if ((comp_err = regcomp(re, restr, REG_EXTENDED | REG_NOSUB)) != 0)
-	{
-		regerror(comp_err, re, comp_errstr, sizeof(comp_errstr));
-		errx(EX_USAGE, "\"%s\": %s", restr, comp_errstr);
-	}
-}
+	raw_p = descr->raw;
 
-static void
-xfopen(FILE **fp, const char *filename, const char *mode)
-{
-	if ((*fp = fopen(filename, mode)) == NULL)
-		err(EX_NOINPUT, "fopen(): %s", filename);
+	for (idx = 0; ((fld = strsep(&raw_p, dfs)) != NULL); idx++)
+		switch (idx)
+		{
+		case 0:
+			descr->pkgname = fld;
+			break;
+		case 1:
+			snprintf(descr->path, sizeof(descr->path), "%s", fld);
+			break;
+		case 2:
+			descr->prefix = fld;
+			break;
+		case 3:
+			descr->comment = fld;
+			break;
+		case 4:
+			descr->pkgdescr = fld;
+			break;
+		case 5:
+			descr->maint = fld;
+			break;
+		case 6:
+			descr->categories = fld;
+			break;
+		case 7:
+			/* XXX */
+			descr->bdep = fld;
+			break;
+		case 8:
+			/* XXX */
+			descr->rdep = fld;
+			break;
+		case 9:
+			descr->www = fld;
+			break;
+		case 10:
+			/* XXX */
+			descr->fdep = fld;
+			break;
+		case 11:
+			/* XXX */
+			descr->edep = fld;
+			break;
+		case 12:
+			/* XXX */
+			descr->pdep = fld;
+			break;
+		default:
+			errx(EX_DATAERR, "Cannot parse INDEX line for %s",
+			     descr->pkgname);
+		}
 }
 
 /* EOF */
