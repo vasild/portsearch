@@ -33,7 +33,7 @@
 
 #define ISSET(flag, flags)	(flags & flag)
 
-static const char rcsid[] = "$Id: display.c,v 1.2 2006/01/13 07:47:53 dd Exp $";
+static const char rcsid[] = "$Id: display.c,v 1.3 2006/01/13 10:11:28 dd Exp $";
 
 void
 display_ports(const struct ports_t *ports, const struct options_t *opts,
@@ -53,17 +53,17 @@ display_ports(const struct ports_t *ports, const struct options_t *opts,
 
 			port = ports->arr[i];
 
-			printf("Port:\t%s\n", port->descr.pkgname);
-			printf("Path:\t%s\n", port->descr.path);
-			printf("Info:\t%s\n", port->descr.comment);
-			printf("Maint:\t%s\n", port->descr.maint);
+			printf("Port:\t%s\n", port->pkgname);
+			printf("Path:\t%s\n", port->path);
+			printf("Info:\t%s\n", port->comment);
+			printf("Maint:\t%s\n", port->maint);
 			printf("Mtime:\t%s", ctime(&port->mtime));
-			//printf("E-deps:\t%s\n", port->descr.edeps);
-			//printf("P-deps:\t%s\n", port->descr.pdeps);
-			//printf("F-deps:\t%s\n", port->descr.fdeps);
-			//printf("B-deps:\t%s\n", port->descr.bdeps);
-			//printf("R-deps:\t%s\n", port->descr.rdeps);
-			printf("WWW:\t%s\n", port->descr.www);
+			//printf("E-deps:\t%s\n", port->edeps);
+			//printf("P-deps:\t%s\n", port->pdeps);
+			//printf("F-deps:\t%s\n", port->fdeps);
+			//printf("B-deps:\t%s\n", port->bdeps);
+			//printf("R-deps:\t%s\n", port->rdeps);
+			printf("WWW:\t%s\n", port->www);
 
 			if (ISSET(DISPLAY_PFILES, flags))
 			{

@@ -53,13 +53,13 @@
 
 #define RSi	'\n'  /* record separator for index file */
 #define FSi	'|'  /* field separator for index file */
-#define DFSi	'|'  /* `make describe' separator */
+#define DFSi	'|'  /* ports INDEX separator */
 
 /* RSp must be '\n' because we use fgets */
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-static const char rcsid[] = "$Id: store_txt.c,v 1.7 2006/01/13 07:47:53 dd Exp $";
+static const char rcsid[] = "$Id: store_txt.c,v 1.8 2006/01/13 10:11:28 dd Exp $";
 
 struct pline_t {
 	unsigned	portid;
@@ -178,9 +178,9 @@ static int plines_cmp(const void *l1v, const void *l2v);
 static void rm_olddir(const struct store_t *s);
 
 /*
- * Parse `make describe' output
+ * Parse INDEX line port->indexln_raw and initialize port's members
  */
-static void parse_descr(struct port_descr_t *descr);
+static void parse_indexln(struct port_t *port);
 
 /***/
 
@@ -290,7 +290,7 @@ add_port_index(struct store_t *s, const struct port_t *port)
 		    "%u%c""%u%c""%s%c",
 		    port->id, FSi,
 		    (unsigned)port->mtime, FSi,
-		    port->descr.raw, RSi) == -1)
+		    port->indexln_raw, RSi) == -1)
 		err(EX_IOERR, "fprintf(): %s", s->index_new_fn);
 }
 
@@ -413,8 +413,8 @@ load_index(struct store_t *s)
 			case 2:
 				/* repair after strsep */
 				*(fld + strlen(fld)) = '|';
-				cur_port->descr.raw = fld;
-				parse_descr(&cur_port->descr);
+				cur_port->indexln_raw = fld;
+				parse_indexln(cur_port);
 				break;
 			default:
 				assert(0 && "The impossible happened, committing suicide");
@@ -594,11 +594,11 @@ s_load_port_by_path(struct store_t *s, struct port_t *port)
 		if (s->ports.arr[i] == NULL)
 			continue;
 
-		if (strcmp(s->ports.arr[i]->descr.path, port->descr.path) == 0)
+		if (strcmp(s->ports.arr[i]->path, port->path) == 0)
 		{
 			port->id = s->ports.arr[i]->id;
 			port->mtime = s->ports.arr[i]->mtime;
-			port->descr.raw = s->ports.arr[i]->descr.raw;
+			port->indexln_raw = s->ports.arr[i]->indexln_raw;
 			return 0;
 		}
 	}
@@ -719,64 +719,64 @@ rm_olddir(const struct store_t *s)
 }
 
 static void
-parse_descr(struct port_descr_t *descr)
+parse_indexln(struct port_t *port)
 {
 	char	dfs[2] = {DFSi, '\0'};
 	char	*fld, *raw_p;
 	size_t	idx;
 
-	raw_p = descr->raw;
+	raw_p = port->indexln_raw;
 
 	for (idx = 0; ((fld = strsep(&raw_p, dfs)) != NULL); idx++)
 		switch (idx)
 		{
 		case 0:
-			descr->pkgname = fld;
+			port->pkgname = fld;
 			break;
 		case 1:
-			snprintf(descr->path, sizeof(descr->path), "%s", fld);
+			snprintf(port->path, sizeof(port->path), "%s", fld);
 			break;
 		case 2:
-			descr->prefix = fld;
+			port->prefix = fld;
 			break;
 		case 3:
-			descr->comment = fld;
+			port->comment = fld;
 			break;
 		case 4:
-			descr->pkgdescr = fld;
+			port->pkgdescr = fld;
 			break;
 		case 5:
-			descr->maint = fld;
+			port->maint = fld;
 			break;
 		case 6:
-			descr->categories = fld;
+			port->categories = fld;
 			break;
 		case 7:
 			/* XXX */
-			descr->bdep = fld;
+			port->bdep = fld;
 			break;
 		case 8:
 			/* XXX */
-			descr->rdep = fld;
+			port->rdep = fld;
 			break;
 		case 9:
-			descr->www = fld;
+			port->www = fld;
 			break;
 		case 10:
 			/* XXX */
-			descr->fdep = fld;
+			port->fdep = fld;
 			break;
 		case 11:
 			/* XXX */
-			descr->edep = fld;
+			port->edep = fld;
 			break;
 		case 12:
 			/* XXX */
-			descr->pdep = fld;
+			port->pdep = fld;
 			break;
 		default:
 			errx(EX_DATAERR, "Cannot parse INDEX line for %s",
-			     descr->pkgname);
+			     port->pkgname);
 		}
 }
 

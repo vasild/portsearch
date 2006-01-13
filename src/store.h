@@ -80,9 +80,8 @@ void s_read_start(struct store_t *s);
 void s_read_end(struct store_t *s);
 
 /*
- * Retrieve port's data, fs_category and fs_port members
- * of `port' must be set. If port is not found, then -1 is returned
- * s_read_start() must have been called
+ * Retrieve port's data from store, which has been s_read_start'ed
+ * port->desc.path must be set. If port is not found, then -1 is returned
  */
 int s_load_port_by_path(struct store_t *s, struct port_t *port);
 

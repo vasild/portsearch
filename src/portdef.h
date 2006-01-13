@@ -31,29 +31,26 @@
 
 #include "vector.h"
 
-struct port_descr_t {
-	char	*raw;
-	char	*pkgname;
-	char	path[128];
-	char	*prefix;
-	char	*comment;
-	char	*pkgdescr;
-	char	*maint;
-	char	*categories;
-	char	*fdep;
-	char	*edep;
-	char	*pdep;
-	char	*bdep;
-	char	*rdep;
-	char	*www;
-};
-
 struct port_t {
-	unsigned		id;  /* port number */
-	time_t			mtime;  /* last modification time */
-	struct port_descr_t	descr;  /* data from INDEX file */
-	struct vector_t		plist;  /* plist files */
-	int			matched;  /* matched by some search criteria */
+	unsigned	id;  /* port unique number */
+	time_t		mtime;  /* last modification time */
+	char		path[128];  /* full port's path, used to identify the port when id is not applicable */
+	char		*indexln_raw;  /* line from INDEX file for this port */
+	/* pointers inside indexln_raw */
+	char		*pkgname;
+	char		*prefix;
+	char		*comment;
+	char		*pkgdescr;
+	char		*maint;
+	char		*categories;
+	char		*fdep;
+	char		*edep;
+	char		*pdep;
+	char		*bdep;
+	char		*rdep;
+	char		*www;
+	struct vector_t	plist;  /* plist files */
+	int		matched;  /* matched by some search criteria */
 };
 
 struct ports_t {
