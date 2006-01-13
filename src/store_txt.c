@@ -59,7 +59,7 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-static const char rcsid[] = "$Id: store_txt.c,v 1.8 2006/01/13 10:11:28 dd Exp $";
+static const char rcsid[] = "$Id: store_txt.c,v 1.9 2006/01/13 11:02:41 dd Exp $";
 
 struct pline_t {
 	unsigned	portid;
@@ -752,27 +752,22 @@ parse_indexln(struct port_t *port)
 			port->categories = fld;
 			break;
 		case 7:
-			/* XXX */
 			port->bdep = fld;
 			break;
 		case 8:
-			/* XXX */
 			port->rdep = fld;
 			break;
 		case 9:
 			port->www = fld;
 			break;
 		case 10:
-			/* XXX */
-			port->fdep = fld;
-			break;
-		case 11:
-			/* XXX */
 			port->edep = fld;
 			break;
-		case 12:
-			/* XXX */
+		case 11:
 			port->pdep = fld;
+			break;
+		case 12:
+			port->fdep = fld;
 			break;
 		default:
 			errx(EX_DATAERR, "Cannot parse INDEX line for %s",
