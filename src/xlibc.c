@@ -33,6 +33,8 @@
 
 #include "xlibc.h"
 
+static const char rcsid[] = "$Id: xlibc.c,v 1.3 2006/01/13 10:13:22 dd Exp $";
+
 void *
 xmalloc(size_t size)
 {
