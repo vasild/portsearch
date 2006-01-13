@@ -40,7 +40,10 @@
 #include "portsearch.h"
 #include "store.h"
 
-static const char rcsid[] = "$Id: portsearch.c,v 1.8 2006/01/13 14:09:47 dd Exp $";
+#define OPT_NAME	"name="
+#define OPT_NAME_LEN	5
+
+static const char rcsid[] = "$Id: portsearch.c,v 1.9 2006/01/13 14:26:43 dd Exp $";
 
 /*
  * Retrieve PORTSDIR using make -V PORTSDIR
@@ -131,10 +134,13 @@ usage()
 	prog = getprogname();
 
 	fprintf(stderr, "Usage:\n");
+	fprintf(stderr, "\n");
 	fprintf(stderr, "update/create database:\n");
 	fprintf(stderr, "  %s -u [-p portsdir] [-vvv]\n", prog);
-	fprintf(stderr, "show ports that install file\n");
-	fprintf(stderr, "  %s -f fileregexp\n", prog);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "search for ports that (based on extended regular expressions):\n");
+	fprintf(stderr, "  -n name\tare named like `name' (%s can be used instead of -n)\n", OPT_NAME);
+	fprintf(stderr, "  -f file\tinstall file `file'\n");
 
 	exit(EX_USAGE);
 }
@@ -173,8 +179,14 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 	argc -= optind;
 	argv += optind;
 
-	if (argc > 0)
-		usage();
+	for (; argc > 0; argc--)
+		if (strncmp(OPT_NAME, argv[argc - 1], OPT_NAME_LEN) == 0)
+		{
+			opts->search_crit |= SEARCH_BY_NAME;
+			opts->search_name = argv[argc - 1] + OPT_NAME_LEN;
+		}
+		else
+			usage();
 
 	if (!opts->update_db && !opts->search_crit)
 		usage();
