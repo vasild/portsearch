@@ -99,10 +99,12 @@ void s_search_start(struct store_t *s);
 void s_search_end(struct store_t *s);
 
 /*
- * Retrieve port's data from store, which has been s_read_start'ed
- * port->desc.path must be set. If port is not found, then -1 is returned
+ * Get pointer to port in store that has its path member equal to `path'
+ * Store must have been s_read_start'ed
+ * If port is not found, then -1 is returned
  */
-int s_load_port_by_path(struct store_t *s, struct port_t *port);
+int s_load_port_by_path(struct store_t *s, const char *path,
+			struct port_t **port);
 
 /*
  * Load port's plist

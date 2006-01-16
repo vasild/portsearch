@@ -33,7 +33,7 @@
 
 #define ISSET(a, b)	(a & b)
 
-static const char rcsid[] = "$Id: display.c,v 1.5 2006/01/13 14:09:47 dd Exp $";
+static const char rcsid[] = "$Id: display.c,v 1.6 2006/01/16 17:37:53 dd Exp $";
 
 void
 display_ports(const struct ports_t *ports, int search_crit)
@@ -56,7 +56,6 @@ display_ports(const struct ports_t *ports, int search_crit)
 			printf("Path:\t%s\n", port->path);
 			printf("Info:\t%s\n", port->comment);
 			printf("Maint:\t%s\n", port->maint);
-			printf("Mtime:\t%s", ctime(&port->mtime));
 			//printf("E-deps:\t%s\n", port->edep);
 			//printf("P-deps:\t%s\n", port->pdep);
 			//printf("F-deps:\t%s\n", port->fdep);

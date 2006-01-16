@@ -44,6 +44,7 @@
 
 #include "display.h"
 #include "exhaust_fp.h"
+#include "parse_indexln.h"
 #include "portdef.h"
 #include "store.h"
 #include "vector.h"
@@ -58,7 +59,7 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-static const char rcsid[] = "$Id: store_txt.c,v 1.11 2006/01/13 14:09:47 dd Exp $";
+static const char rcsid[] = "$Id: store_txt.c,v 1.12 2006/01/16 17:37:53 dd Exp $";
 
 struct pline_t {
 	unsigned	portid;
@@ -176,11 +177,6 @@ static int plines_cmp(const void *l1v, const void *l2v);
  */
 static void rm_olddir(const struct store_t *s);
 
-/*
- * Parse INDEX line port->indexln_raw and initialize port's members
- */
-static void parse_indexln(struct port_t *port);
-
 /***/
 
 void
@@ -292,10 +288,18 @@ static void
 add_port_index(struct store_t *s, const struct port_t *port)
 {
 	if (fprintf(s->index_new_fp,
-		    "%u%c""%u%c""%s%c",
+		    "%u%c"
+		    "%s%c""%s%c""%s%c"
+		    "%s%c""%s%c""%s%c"
+		    "%s%c""%s%c""%s%c"
+		    "%s%c""%s%c""%s%c"
+		    "%s%c",
 		    port->id, FSi,
-		    (unsigned)port->mtime, FSi,
-		    port->indexln_raw, RSi) == -1)
+		    port->pkgname, FSi, port->path, FSi, port->prefix, FSi,
+		    port->comment, FSi, port->pkgdescr, FSi, port->maint, FSi,
+		    port->categories, FSi, port->bdep, FSi, port->rdep, FSi,
+		    port->www, FSi, port->edep, FSi, port->pdep, FSi,
+		    port->fdep, RSi) == -1)
 		err(EX_IOERR, "fprintf(): %s", s->index_new_fn);
 }
 
@@ -400,9 +404,9 @@ static void
 load_index(struct store_t *s)
 {
 	char		rs[2] = {RSi, '\0'};
-	char		fs[2] = {FSi, '\0'};
-	char		*raw_p, *rec, *fld;
-	size_t		rec_idx, fld_idx;
+	char		*raw_p;
+	char		*rec;
+	size_t		rec_idx;
 	size_t		i;
 	struct port_t	*cur_port;
 
@@ -428,28 +432,11 @@ load_index(struct store_t *s)
 
 		cur_port->matched = 0;
 
-		for (fld_idx = 0; fld_idx <= 2; fld_idx++)
-		{
-			fld = strsep(&rec, fs);
-
-			switch (fld_idx)
-			{
-			case 0:
-				cur_port->id = (unsigned)strtoul(fld, NULL, 10);
-				break;
-			case 1:
-				cur_port->mtime = (time_t)strtoul(fld, NULL,10);
-				break;
-			case 2:
-				/* repair after strsep */
-				*(fld + strlen(fld)) = FSi;
-				cur_port->indexln_raw = fld;
-				parse_indexln(cur_port);
-				break;
-			default:
-				assert(0 && "The impossible happened, committing suicide");
-			}
-		}
+		cur_port->indexln_raw = xstrchr(rec, FSi);
+		cur_port->indexln_raw[0] = '\0';
+		cur_port->indexln_raw++;
+		parse_indexln(cur_port);
+		cur_port->id = (unsigned)strtoul(rec, NULL, 10);
 	}
 
 	/* normally ports are loaded ordered, but just to make sure */
@@ -615,7 +602,7 @@ ports_cmp(const void *p1v, const void *p2v)
 }
 
 int
-s_load_port_by_path(struct store_t *s, struct port_t *port)
+s_load_port_by_path(struct store_t *s, const char *path, struct port_t **port)
 {
 	size_t	i;
 
@@ -624,11 +611,9 @@ s_load_port_by_path(struct store_t *s, struct port_t *port)
 		if (s->ports.arr[i] == NULL)
 			continue;
 
-		if (strcmp(s->ports.arr[i]->path, port->path) == 0)
+		if (strcmp(s->ports.arr[i]->path, path) == 0)
 		{
-			port->id = s->ports.arr[i]->id;
-			port->mtime = s->ports.arr[i]->mtime;
-			port->indexln_raw = s->ports.arr[i]->indexln_raw;
+			*port = s->ports.arr[i];
 			return 0;
 		}
 	}
@@ -746,63 +731,6 @@ rm_olddir(const struct store_t *s)
 	if (rmdir(s->olddir) == -1)
 		if (errno != ENOENT)
 			err(EX_UNAVAILABLE, "rmdir(): %s", s->olddir);
-}
-
-static void
-parse_indexln(struct port_t *port)
-{
-	char	fs[2] = {IDXFS, '\0'};
-	char	*fld, *raw_p;
-	size_t	idx;
-
-	raw_p = port->indexln_raw;
-
-	for (idx = 0; ((fld = strsep(&raw_p, fs)) != NULL); idx++)
-		switch (idx)
-		{
-		case 0:
-			port->pkgname = fld;
-			break;
-		case 1:
-			snprintf(port->path, sizeof(port->path), "%s", fld);
-			break;
-		case 2:
-			port->prefix = fld;
-			break;
-		case 3:
-			port->comment = fld;
-			break;
-		case 4:
-			port->pkgdescr = fld;
-			break;
-		case 5:
-			port->maint = fld;
-			break;
-		case 6:
-			port->categories = fld;
-			break;
-		case 7:
-			port->bdep = fld;
-			break;
-		case 8:
-			port->rdep = fld;
-			break;
-		case 9:
-			port->www = fld;
-			break;
-		case 10:
-			port->edep = fld;
-			break;
-		case 11:
-			port->pdep = fld;
-			break;
-		case 12:
-			port->fdep = fld;
-			break;
-		default:
-			errx(EX_DATAERR, "Cannot parse INDEX line for %s",
-			     port->pkgname);
-		}
 }
 
 /* EOF */

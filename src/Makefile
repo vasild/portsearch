@@ -1,7 +1,7 @@
 #
 # Portsearch
 #
-# $Id: Makefile,v 1.8 2006/01/16 08:40:09 dd Exp $
+# $Id: Makefile,v 1.9 2006/01/16 17:37:53 dd Exp $
 #
 
 PROGS=\
@@ -15,6 +15,7 @@ portsearch_objs=\
 	exhaust_fp.o \
 	logmsg.o \
 	mkdb.o \
+	parse_indexln.o \
 	portsearch.o \
 	store_txt.o \
 	vector.o \

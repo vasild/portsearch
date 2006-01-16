@@ -24,42 +24,69 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PORTDEF_H
-#define PORTDEF_H
+#include <err.h>
+#include <stdio.h>
+#include <string.h>
+#include <sysexits.h>
 
-#include <time.h>
+#include "parse_indexln.h"
+#include "portdef.h"
 
-#include "vector.h"
+void
+parse_indexln(struct port_t *port)
+{
+	char	fs[2] = {IDXFS, '\0'};
+	char	*fld, *raw_p;
+	size_t	idx;
 
-/* field separator in /usr/ports/INDEX */
-#define IDXFS	'|'
+	raw_p = port->indexln_raw;
 
-struct port_t {
-	unsigned	id;  /* port unique number */
-	char		path[128];  /* full port's path, used to identify the port when id is not applicable */
-	char		*indexln_raw;  /* line from INDEX file for this port */
-	/* pointers inside indexln_raw */
-	char		*pkgname;
-	char		*prefix;
-	char		*comment;
-	char		*pkgdescr;
-	char		*maint;
-	char		*categories;
-	char		*fdep;
-	char		*edep;
-	char		*pdep;
-	char		*bdep;
-	char		*rdep;
-	char		*www;
-	struct vector_t	plist;  /* plist files */
-	int		matched;  /* logical OR'd SEARCH_BY_* */
-};
-
-struct ports_t {
-	struct port_t	**arr;  /* ports' array, there may be NULL pointers in it */
-	size_t		sz;  /* number of allocated elements in arr */
-};
-
-#endif  /* PORTDEF_H */
+	for (idx = 0; ((fld = strsep(&raw_p, fs)) != NULL); idx++)
+		switch (idx)
+		{
+		case 0:
+			port->pkgname = fld;
+			break;
+		case 1:
+			snprintf(port->path, sizeof(port->path), "%s", fld);
+			break;
+		case 2:
+			port->prefix = fld;
+			break;
+		case 3:
+			port->comment = fld;
+			break;
+		case 4:
+			port->pkgdescr = fld;
+			break;
+		case 5:
+			port->maint = fld;
+			break;
+		case 6:
+			port->categories = fld;
+			break;
+		case 7:
+			port->bdep = fld;
+			break;
+		case 8:
+			port->rdep = fld;
+			break;
+		case 9:
+			port->www = fld;
+			break;
+		case 10:
+			port->edep = fld;
+			break;
+		case 11:
+			port->pdep = fld;
+			break;
+		case 12:
+			port->fdep = fld;
+			break;
+		default:
+			errx(EX_DATAERR, "Cannot parse INDEX line for %s",
+			     port->pkgname);
+		}
+}
 
 /* EOF */

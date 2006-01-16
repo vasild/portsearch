@@ -37,13 +37,14 @@
 #include "exhaust_fp.h"
 #include "logmsg.h"
 #include "mkdb.h"
+#include "parse_indexln.h"
 #include "portdef.h"
 #include "portsearch.h"
 #include "store.h"
 #include "vector.h"
 #include "xlibc.h"
 
-static const char rcsid[] = "$Id: mkdb.c,v 1.10 2006/01/13 11:47:51 dd Exp $";
+static const char rcsid[] = "$Id: mkdb.c,v 1.11 2006/01/16 17:37:53 dd Exp $";
 
 /* process_indexline parameter */
 struct pi_arg_t {
@@ -67,15 +68,9 @@ static void _set_portsindex(char *line, void *arg);
 static void process_indexline(char *line, void *arg_void);
 
 /*
- * Initialize port->path using port->indexln_raw
- */
-static void set_port_path(struct port_t *port);
-
-/*
  * port->path must be initialized
  * Initialize:
  * port->id using internal counter
- * port->mtime from the filesystem
  * port->plist by either generating it or retrieving it from
  * the old database (if one exists and port has not been modified recently)
  */
@@ -91,12 +86,6 @@ static void mkplist(struct port_t *port, const struct pi_arg_t *arg);
  * Add file to port's plist
  */
 static void add_pfile(char *file, void *port_void);
-
-/*
- * Retrieve port's last modification time
- * port->path must be initialized
- */
-static void set_port_mtime(const char *portsdir, struct port_t *port);
 
 /*
  * Return pointer inside portpath, that points after portsdir
@@ -172,9 +161,9 @@ process_indexline(char *line, void *arg_void)
 
 	v_start(&addport.plist, 256);
 
-	set_port_path(&addport);
+	parse_indexln(&addport);
 
-#define TEST	1
+#define TEST	0
 
 #if TEST
 	if (strncmp("/usr/ports/archivers", addport.path, 20) == 0)
@@ -194,49 +183,32 @@ process_indexline(char *line, void *arg_void)
 }
 
 static void
-set_port_path(struct port_t *port)
-{
-	char	*path_beg;
-	char	*path_end;
-
-	path_beg = xstrchr(port->indexln_raw, IDXFS) + 1;
-	path_end = xstrchr(path_beg, IDXFS);
-
-	path_end[0] = '\0';
-
-	snprintf(port->path, sizeof(port->path), "%s", path_beg);
-
-	path_end[0] = IDXFS;
-}
-
-static void
 set_port_data(struct port_t *port, const struct pi_arg_t *arg)
 {
 	static unsigned	portid = 1;
 
 	const char	*spath;
 
-	struct port_t	s_port;
+	struct port_t	*store_port;
 	int		gen_plist;
 
 	spath = mk_port_short_path(arg->opts->portsdir, port->path);
 
-	set_port_mtime(arg->opts->portsdir, port);
+	parse_indexln(port);
 
-	logmsg(L_DEBUG, arg->opts->verbose, "===> %s filesystem mtime: %s",
-	       spath, ctime(&port->mtime));
+	logmsg(L_DEBUG, arg->opts->verbose, "===> %s INDEX version: %s",
+	       spath, port->pkgname);
 
 	if (arg->s_exists)
 	{
-		snprintf(s_port.path, sizeof(s_port.path), "%s", port->path);
-
-		if (s_load_port_by_path(arg->store, &s_port) != -1)
+		if (s_load_port_by_path(arg->store, port->path, &store_port)
+		    != -1)
 		{
 			logmsg(L_DEBUG, arg->opts->verbose,
-			       "===> %s database mtime:   %s", spath,
-			       ctime(&s_port.mtime));
+			       "===> %s database version:   %s", spath,
+			       store_port->pkgname);
 
-			if (port->mtime > s_port.mtime)
+			if (1 /* XXX */)
 			{
 				logmsg(L_INFO, arg->opts->verbose,
 				       "===> %s outdated, recreating data\n",
@@ -264,12 +236,10 @@ set_port_data(struct port_t *port, const struct pi_arg_t *arg)
 		gen_plist = 1;
 
 	if (gen_plist)
-	{
 		mkplist(port, arg);
-	}
 	else
 	{
-		port->id = s_port.id;  /* temporary set to the old id */
+		port->id = store_port->id;  /* temporary set to the old id */
 		s_load_port_plist(arg->store, port);
 	}
 
@@ -281,18 +251,15 @@ set_port_data(struct port_t *port, const struct pi_arg_t *arg)
 static void
 mkplist(struct port_t *port, const struct pi_arg_t *arg)
 {
-	char		arg_PORTDIR[PATH_MAX];
-	char		arg_I[PATH_MAX];
+	char		our_makefile[PATH_MAX];
+	char		port_makefile[PATH_MAX];
 	char		*cmd = "make";
 	char *const	args[] = {cmd,
-		"-C", "../Mk", arg_I, arg_PORTDIR, "show-plist", NULL};
+		"-C", port->path, "-f", our_makefile, "-f", port_makefile,
+		"show-plist", NULL};
 
-	/* math/vecfem (and maybe others) does ``.include <Makefile.inc>''
-	 * to include /usr/ports/math/vecfem/Makefile.inc and therefore
-	 * needs -I */
-	snprintf(arg_I, sizeof(arg_I), "-I%s", port->path);
-	snprintf(arg_PORTDIR, sizeof(arg_PORTDIR), "PORTDIR=%s",
-		 port->path);
+	snprintf(our_makefile, sizeof(our_makefile), "%s/Makefile", DATADIR);
+	snprintf(port_makefile, sizeof(port_makefile), "%s/Makefile", port->path);
 
 	execcmd(cmd, args, add_pfile, port);
 }
@@ -304,20 +271,6 @@ add_pfile(char *file, void *port_void)
 
 	if (file[0] != '@')
 		v_add(&port->plist, file, strlen(file) + 1);
-}
-
-static void
-set_port_mtime(const char *portsdir, struct port_t *port)
-{
-	char		path[PATH_MAX];
-	struct stat	sb;
-
-	snprintf(path, sizeof(path), "%s/Makefile", port->path);
-
-	if (stat(path, &sb) == -1)
-		err(EX_OSERR, "stat(): %s", path);
-
-	port->mtime = sb.st_mtime;
 }
 
 static const char *

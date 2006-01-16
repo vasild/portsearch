@@ -24,42 +24,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PORTDEF_H
-#define PORTDEF_H
+#ifndef PARSE_INDEXLN_H
+#define PARSE_INDEXLN_H
 
-#include <time.h>
+#include <stdio.h>
 
-#include "vector.h"
+#include "portdef.h"
 
-/* field separator in /usr/ports/INDEX */
-#define IDXFS	'|'
+/*
+ * Parse `indexln_raw' member and initialize other members of port
+ * to point inside it. Separators in `indexln_raw' are replaced with '\0's
+ */
+void parse_indexln(struct port_t *port);
 
-struct port_t {
-	unsigned	id;  /* port unique number */
-	char		path[128];  /* full port's path, used to identify the port when id is not applicable */
-	char		*indexln_raw;  /* line from INDEX file for this port */
-	/* pointers inside indexln_raw */
-	char		*pkgname;
-	char		*prefix;
-	char		*comment;
-	char		*pkgdescr;
-	char		*maint;
-	char		*categories;
-	char		*fdep;
-	char		*edep;
-	char		*pdep;
-	char		*bdep;
-	char		*rdep;
-	char		*www;
-	struct vector_t	plist;  /* plist files */
-	int		matched;  /* logical OR'd SEARCH_BY_* */
-};
-
-struct ports_t {
-	struct port_t	**arr;  /* ports' array, there may be NULL pointers in it */
-	size_t		sz;  /* number of allocated elements in arr */
-};
-
-#endif  /* PORTDEF_H */
+#endif  /* PARSE_INDEXLN_H */
 
 /* EOF */
