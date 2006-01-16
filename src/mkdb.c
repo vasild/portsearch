@@ -45,7 +45,7 @@
 #include "vector.h"
 #include "xlibc.h"
 
-__RCSID("$Id: mkdb.c,v 1.12 2006/01/16 17:53:32 dd Exp $");
+__RCSID("$Id: mkdb.c,v 1.13 2006/01/16 18:25:42 dd Exp $");
 
 /* process_indexline parameter */
 struct pi_arg_t {
@@ -73,7 +73,7 @@ static void process_indexline(char *line, void *arg_void);
  * Initialize:
  * port->id using internal counter
  * port->plist by either generating it or retrieving it from
- * the old database (if one exists and port has not been modified recently)
+ * the old store (if one exists and port has not been modified recently)
  */
 static void set_port_data(struct port_t *port, const struct pi_arg_t *arg);
 
@@ -94,6 +94,11 @@ static void add_pfile(char *file, void *port_void);
 static const char *mk_port_short_path(const char *portsdir,
 				      const char *portpath);
 
+/*
+ * Return pointer inside pkgname - after the last `-'
+ */
+static const char *mk_pkgversion(const char *pkgname);
+
 /***/
 
 void
@@ -106,19 +111,19 @@ mkdb(const struct options_t *opts)
 
 	set_portsindex(opts->portsdir);
 
-	logmsg(L_NOTICE, opts->verbose, "Creating database\n");
+	logmsg(L_NOTICE, opts->verbose, "Creating store\n");
 
 	alloc_store(&arg.store);
 
 	if ((arg.s_exists = s_exists(NULL)))
 	{
 		logmsg(L_NOTICE, opts->verbose,
-		       "Using data from existent database\n");
+		       "Using data from existent store\n");
 		s_read_start(arg.store);
 	}
 	else
 		logmsg(L_NOTICE, opts->verbose,
-		       "Previous database does not exist, creating from scratch\n");
+		       "Previous store does not exist, creating from scratch\n");
 
 	s_upd_start(arg.store);
 
@@ -164,7 +169,7 @@ process_indexline(char *line, void *arg_void)
 
 	parse_indexln(&addport);
 
-#define TEST	0
+#define TEST	1
 
 #if TEST
 	if (strncmp("/usr/ports/archivers", addport.path, 20) == 0)
@@ -189,6 +194,8 @@ set_port_data(struct port_t *port, const struct pi_arg_t *arg)
 	static unsigned	portid = 1;
 
 	const char	*spath;
+	const char	*pkgver_index;
+	const char	*pkgver_store;
 
 	struct port_t	*store_port;
 	int		gen_plist;
@@ -197,22 +204,26 @@ set_port_data(struct port_t *port, const struct pi_arg_t *arg)
 
 	parse_indexln(port);
 
-	logmsg(L_DEBUG, arg->opts->verbose, "===> %s INDEX version: %s",
-	       spath, port->pkgname);
+	pkgver_index = mk_pkgversion(port->pkgname);
+
+	logmsg(L_DEBUG, arg->opts->verbose, "===> %s INDEX version: %s\n",
+	       spath, pkgver_index);
 
 	if (arg->s_exists)
 	{
 		if (s_load_port_by_path(arg->store, port->path, &store_port)
 		    != -1)
 		{
-			logmsg(L_DEBUG, arg->opts->verbose,
-			       "===> %s database version:   %s", spath,
-			       store_port->pkgname);
+			pkgver_store = mk_pkgversion(store_port->pkgname);
 
-			if (1 /* XXX */)
+			logmsg(L_DEBUG, arg->opts->verbose,
+			       "===> %s STORE version: %s\n", spath,
+			       pkgver_store);
+
+			if (strcmp(pkgver_store, pkgver_index) != 0)
 			{
 				logmsg(L_INFO, arg->opts->verbose,
-				       "===> %s outdated, recreating data\n",
+				       "===> %s versions differ, recreating data\n",
 				       spath);
 				gen_plist = 1;
 			}
@@ -227,7 +238,7 @@ set_port_data(struct port_t *port, const struct pi_arg_t *arg)
 		else
 		{
 			logmsg(L_INFO, arg->opts->verbose,
-			       "===> %s not found in database, recreating data\n",
+			       "===> %s not found in store, recreating data\n",
 			       spath);
 			gen_plist = 1;
 		}
@@ -285,6 +296,18 @@ mk_port_short_path(const char *portsdir, const char *portpath)
 		spath++;
 
 	return spath;
+}
+
+static const char *
+mk_pkgversion(const char *pkgname)
+{
+	const char	*ret;
+
+	if ((ret = strrchr(pkgname, '-')) == NULL)
+		/* should never happen */
+		return pkgname;
+
+	return ++ret;
 }
 
 /* EOF */
