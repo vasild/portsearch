@@ -1,15 +1,8 @@
 #
 # Portsearch
 #
-# $Id: Makefile,v 1.7 2006/01/12 15:56:09 dd Exp $
+# $Id: Makefile,v 1.8 2006/01/16 08:40:09 dd Exp $
 #
-
-MKDEP?=	/usr/bin/mkdep
-RM?=	/bin/rm
-
-CFLAGS+=	-Wall -Werror
-
-CFLAGS:=	${CFLAGS:C/-O[023s]//g} -g
 
 PROGS=\
 	portsearch \
@@ -59,5 +52,7 @@ ${prog}: ${${prog}_objs}
 	${CC} ${LDFLAGS} ${${prog}_objs} -o ${prog}
 
 .endfor
+
+.include "../Makefile.var"
 
 # EOF

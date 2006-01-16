@@ -1,0 +1,27 @@
+#
+# Portsearch
+#
+# $Id: Makefile.var,v 1.1 2006/01/16 08:40:09 dd Exp $
+#
+
+PREFIX?=	/usr/local
+DATADIR?=	${PREFIX}/share/portsearch
+
+INSTALL?=	install
+INSTALL_PROGRAM?=	${INSTALL} ${STRIP} -o root -g wheel -m 555
+INSTALL_DATA?=	${INSTALL} -o root -g wheel -m 444
+MAKE?=	/usr/bin/make
+MKDEP?=	/usr/bin/mkdep
+RM?=	/bin/rm
+
+CFLAGS+=	-Wall
+
+.if defined(DEBUG) || defined(WITH_DEBUG)
+CFLAGS+=	-Werror
+CFLAGS:=	${CFLAGS:C/-O[023s]//g} -g
+STRIP=
+.else
+STRIP?=	-s
+.endif
+
+# EOF
