@@ -24,12 +24,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+
 #include <stdarg.h>
 #include <stdio.h>
 
 #include "logmsg.h"
 
-static const char rcsid[] = "$Id: logmsg.c,v 1.1 2006/01/10 09:23:47 dd Exp $";
+__RCSID("$Id: logmsg.c,v 1.2 2006/01/16 17:53:32 dd Exp $");
 
 void
 logmsg(enum l_prio priority, int verbose, const char *msg, ...)

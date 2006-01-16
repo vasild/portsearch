@@ -24,12 +24,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+
 #include <stdio.h>
 #include <string.h>
 
 #include "vector.h"
 
-static const char rcsid[] = "$Id: vector_main.c,v 1.1 2005/12/14 06:11:47 dd Exp $";
+__RCSID("$Id: vector_main.c,v 1.2 2006/01/16 17:53:32 dd Exp $");
 
 int
 main(int argc, char **argv)

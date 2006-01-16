@@ -24,6 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+
 #include <err.h>
 #include <regex.h>
 #include <stdio.h>
@@ -33,7 +35,7 @@
 
 #include "xlibc.h"
 
-static const char rcsid[] = "$Id: xlibc.c,v 1.3 2006/01/13 10:13:22 dd Exp $";
+__RCSID("$Id: xlibc.c,v 1.4 2006/01/16 17:53:32 dd Exp $");
 
 void *
 xmalloc(size_t size)

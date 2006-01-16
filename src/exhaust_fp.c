@@ -24,6 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +34,7 @@
 
 #include "exhaust_fp.h"
 
-static const char rcsid[] = "$Id: exhaust_fp.c,v 1.1 2005/12/23 09:58:55 dd Exp $";
+__RCSID("$Id: exhaust_fp.c,v 1.2 2006/01/16 17:53:32 dd Exp $");
 
 void
 exhaust_fp(FILE *fp, void (*process)(char *, void *), void *process_arg)

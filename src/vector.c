@@ -24,6 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +34,7 @@
 
 #include "vector.h"
 
-static const char rcsid[] = "$Id: vector.c,v 1.2 2006/01/10 09:23:47 dd Exp $";
+__RCSID("$Id: vector.c,v 1.3 2006/01/16 17:53:32 dd Exp $");
 
 void
 v_start(struct vector_t *v, size_t initial_sz)

@@ -24,6 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+
 #include <err.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,7 +34,7 @@
 #include "parse_indexln.h"
 #include "portdef.h"
 
-static const char rcsid[] = "$Id: parse_indexln.c,v 1.2 2006/01/16 17:38:46 dd Exp $";
+__RCSID("$Id: parse_indexln.c,v 1.3 2006/01/16 17:53:32 dd Exp $");
 
 void
 parse_indexln(struct port_t *port)

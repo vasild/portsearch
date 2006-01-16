@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
 #include <sys/param.h>
 
 #include <err.h>
@@ -43,7 +44,7 @@
 #define OPT_NAME	"name="
 #define OPT_NAME_LEN	5
 
-static const char rcsid[] = "$Id: portsearch.c,v 1.9 2006/01/13 14:26:43 dd Exp $";
+__RCSID("$Id: portsearch.c,v 1.10 2006/01/16 17:53:32 dd Exp $");
 
 /*
  * Retrieve PORTSDIR using make -V PORTSDIR

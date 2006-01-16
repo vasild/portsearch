@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
 #include <sys/types.h>
 #include <sys/limits.h>
 #include <sys/param.h>
@@ -59,7 +60,7 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-static const char rcsid[] = "$Id: store_txt.c,v 1.12 2006/01/16 17:37:53 dd Exp $";
+__RCSID("$Id: store_txt.c,v 1.13 2006/01/16 17:53:32 dd Exp $");
 
 struct pline_t {
 	unsigned	portid;

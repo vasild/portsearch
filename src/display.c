@@ -24,6 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+
 #include <stdio.h>
 
 #include "display.h"
@@ -33,7 +35,7 @@
 
 #define ISSET(a, b)	(a & b)
 
-static const char rcsid[] = "$Id: display.c,v 1.6 2006/01/16 17:37:53 dd Exp $";
+__RCSID("$Id: display.c,v 1.7 2006/01/16 17:53:32 dd Exp $");
 
 void
 display_ports(const struct ports_t *ports, int search_crit)

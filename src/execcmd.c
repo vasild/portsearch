@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -41,7 +42,7 @@
 #define PIPE_IN		1
 #define PIPE_OUT	0
 
-static const char rcsid[] = "$Id: execcmd.c,v 1.2 2005/12/23 10:00:18 dd Exp $";
+__RCSID("$Id: execcmd.c,v 1.3 2006/01/16 17:53:32 dd Exp $");
 
 void
 execcmd(const char *cmd, char *const args[],

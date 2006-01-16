@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>
@@ -44,7 +45,7 @@
 #include "vector.h"
 #include "xlibc.h"
 
-static const char rcsid[] = "$Id: mkdb.c,v 1.11 2006/01/16 17:37:53 dd Exp $";
+__RCSID("$Id: mkdb.c,v 1.12 2006/01/16 17:53:32 dd Exp $");
 
 /* process_indexline parameter */
 struct pi_arg_t {
