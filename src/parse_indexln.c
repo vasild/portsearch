@@ -32,6 +32,8 @@
 #include "parse_indexln.h"
 #include "portdef.h"
 
+static const char rcsid[] = "$Id: parse_indexln.c,v 1.2 2006/01/16 17:38:46 dd Exp $";
+
 void
 parse_indexln(struct port_t *port)
 {
