@@ -1,0 +1,59 @@
+debian, apt-file:
+-------
+HW: P4 2.4GHz, 1GB
+output: package:file
+lang: perl
+
+cmd: apt-file search -x '.*' >/dev/null
+results: 1472171
+time: 2m19s
+vsz: 580M
+
+cmd: apt-file search -x aaa >/dev/null
+results: 107
+time: 3.1s
+
+cmd: apt-file search -x aaaaaaaaaaaaa >/dev/null
+results: 0
+time: 3.0s
+
+fedora, yum:
+-------
+HW: P4 2.8GHz, 1GB
+output: package:file
+lang: python
+
+cmd: yum provides '*' >/dev/null
+results: 133857
+time: 25s
+vsz: 41M
+
+cmd: yum provides aaa >/dev/null
+results: 43
+time: 11s
+
+cmd: yum provides aaaaaaaaaaaaa >/dev/null
+results: 0
+time: 11s
+
+freebsd, portsearch:
+-------
+HW: athlon64 2.0GHz, 1GB
+output: package:file
+lang: C
+
+cmd: portsearch -f '.*' >/dev/null
+results: 1464060
+time: 2.1s
+vsz: 122M
+
+cmd: portsearch -f aaa >/dev/null
+results: 202
+time: 0.8s
+
+cmd: portsearch -f aaaaaaaaaaaaa >/dev/null
+results: 0
+time: 0.6s
+
+---
+EOF
