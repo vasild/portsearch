@@ -1,7 +1,7 @@
 #
 # Portsearch
 #
-# $Id: Makefile,v 1.2 2006/01/17 07:21:03 dd Exp $
+# $Id: Makefile,v 1.3 2006/01/17 07:49:39 dd Exp $
 #
 
 SUBDIRS=	src
@@ -14,7 +14,7 @@ ${target}:
 .endfor
 .endfor
 
-install:
+install: build
 	${INSTALL_PROGRAM} src/portsearch ${PREFIX}/bin/
 	${MKDIR} ${DATADIR}
 	${INSTALL_DATA} Mk/Makefile ${DATADIR}/
