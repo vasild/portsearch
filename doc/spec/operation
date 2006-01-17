@@ -1,3 +1,12 @@
+$Id: operation,v 1.2 2006/01/17 07:48:44 dd Exp $
+
 database build:
 
-$Id: operation,v 1.1 2005/11/24 16:24:45 dd Exp $
+for each line in /usr/ports/INDEX
+	create plist for that port
+		if old database exists and pkg version is the same
+			use plist from old database
+		else
+			recreate the plist with `make show-plist'
+	generate unique id
+	store the plist and INDEX line, prepending both with the uniq id
