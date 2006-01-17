@@ -1,7 +1,7 @@
 #
 # Portsearch
 #
-# $Id: Makefile.var,v 1.1 2006/01/16 08:40:09 dd Exp $
+# $Id: Makefile.var,v 1.2 2006/01/17 07:21:03 dd Exp $
 #
 
 PREFIX?=	/usr/local
@@ -12,6 +12,7 @@ INSTALL_PROGRAM?=	${INSTALL} ${STRIP} -o root -g wheel -m 555
 INSTALL_DATA?=	${INSTALL} -o root -g wheel -m 444
 MAKE?=	/usr/bin/make
 MKDEP?=	/usr/bin/mkdep
+MKDIR?=	/bin/mkdir -p
 RM?=	/bin/rm
 
 CFLAGS+=	-Wall
@@ -23,5 +24,7 @@ STRIP=
 .else
 STRIP?=	-s
 .endif
+
+CFLAGS+=	-DDATADIR=\"${DATADIR}\"
 
 # EOF

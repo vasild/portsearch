@@ -1,7 +1,7 @@
 #
 # Portsearch
 #
-# $Id: Makefile,v 1.1 2006/01/16 08:40:09 dd Exp $
+# $Id: Makefile,v 1.2 2006/01/17 07:21:03 dd Exp $
 #
 
 SUBDIRS=	src
@@ -15,8 +15,9 @@ ${target}:
 .endfor
 
 install:
-	${INSTALL_PROGRAM} src/portsearch ${PREFIX}/bin
-	${INSTALL_DATA} Mk/Makefile ${DATADIR}
+	${INSTALL_PROGRAM} src/portsearch ${PREFIX}/bin/
+	${MKDIR} ${DATADIR}
+	${INSTALL_DATA} Mk/Makefile ${DATADIR}/
 
 .include "Makefile.var"
 
