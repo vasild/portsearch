@@ -44,7 +44,7 @@
 #define OPT_NAME	"name="
 #define OPT_NAME_LEN	5
 
-__RCSID("$Id: portsearch.c,v 1.10 2006/01/16 17:53:32 dd Exp $");
+__RCSID("$Id: portsearch.c,v 1.11 2006/01/17 07:58:22 dd Exp $");
 
 /*
  * Retrieve PORTSDIR using make -V PORTSDIR
@@ -134,6 +134,8 @@ usage()
 	
 	prog = getprogname();
 
+	fprintf(stderr, "portsearch %s\n", PORTSEARCH_VERSION);
+	fprintf(stderr, "\n");
 	fprintf(stderr, "Usage:\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "update/create database:\n");

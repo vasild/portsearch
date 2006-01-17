@@ -27,6 +27,8 @@
 #ifndef PORTSEARCH_H
 #define PORTSEARCH_H
 
+#define PORTSEARCH_VERSION	"1.0.0"
+
 #define SEARCH_BY_PFILE	0x1
 #define SEARCH_BY_NAME	0x2
 
