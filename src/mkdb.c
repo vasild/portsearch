@@ -45,7 +45,7 @@
 #include "vector.h"
 #include "xlibc.h"
 
-__RCSID("$Id: mkdb.c,v 1.14 2006/01/17 07:21:40 dd Exp $");
+__RCSID("$Id: mkdb.c,v 1.15 2006/01/17 07:40:08 dd Exp $");
 
 /* process_indexline parameter */
 struct pi_arg_t {
@@ -201,8 +201,6 @@ set_port_data(struct port_t *port, const struct pi_arg_t *arg)
 	int		gen_plist;
 
 	spath = mk_port_short_path(arg->opts->portsdir, port->path);
-
-	parse_indexln(port);
 
 	pkgver_index = mk_pkgversion(port->pkgname);
 
