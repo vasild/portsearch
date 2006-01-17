@@ -1,0 +1,14 @@
+-------------
+Installation:
+-------------
+
+$ make
+# make install
+
+------
+Usage:
+------
+
+$ portsearch -h
+
+No man page at the moment
