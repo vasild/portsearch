@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 Vasil Dimov
+ * Copyright 2005-2006 Vasil Dimov
  * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,7 @@
 #define OPT_NAME	"name="
 #define OPT_NAME_LEN	5
 
-__RCSID("$Id: portsearch.c,v 1.11 2006/01/17 07:58:22 dd Exp $");
+__RCSID("$Id: portsearch.c,v 1.12 2006/01/30 12:44:16 dd Exp $");
 
 /*
  * Retrieve PORTSDIR using make -V PORTSDIR

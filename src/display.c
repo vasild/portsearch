@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 Vasil Dimov
+ * Copyright 2005-2006 Vasil Dimov
  * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@
 
 #define ISSET(a, b)	(a & b)
 
-__RCSID("$Id: display.c,v 1.7 2006/01/16 17:53:32 dd Exp $");
+__RCSID("$Id: display.c,v 1.8 2006/01/30 12:44:16 dd Exp $");
 
 void
 display_ports(const struct ports_t *ports, int search_crit)

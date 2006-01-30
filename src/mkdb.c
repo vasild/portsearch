@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 Vasil Dimov
+ * Copyright 2005-2006 Vasil Dimov
  * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@
 #include "vector.h"
 #include "xlibc.h"
 
-__RCSID("$Id: mkdb.c,v 1.15 2006/01/17 07:40:08 dd Exp $");
+__RCSID("$Id: mkdb.c,v 1.16 2006/01/30 12:44:16 dd Exp $");
 
 /* process_indexline parameter */
 struct pi_arg_t {

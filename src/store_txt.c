@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 Vasil Dimov
+ * Copyright 2005-2006 Vasil Dimov
  * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,7 +60,7 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-__RCSID("$Id: store_txt.c,v 1.13 2006/01/16 17:53:32 dd Exp $");
+__RCSID("$Id: store_txt.c,v 1.14 2006/01/30 12:44:16 dd Exp $");
 
 struct pline_t {
 	unsigned	portid;

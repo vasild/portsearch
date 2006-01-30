@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 Vasil Dimov
+ * Copyright 2005-2006 Vasil Dimov
  * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,7 @@
 
 #include "vector.h"
 
-__RCSID("$Id: vector_main.c,v 1.2 2006/01/16 17:53:32 dd Exp $");
+__RCSID("$Id: vector_main.c,v 1.3 2006/01/30 12:44:16 dd Exp $");
 
 int
 main(int argc, char **argv)
