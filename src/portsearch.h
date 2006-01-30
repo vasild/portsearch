@@ -27,10 +27,21 @@
 #ifndef PORTSEARCH_H
 #define PORTSEARCH_H
 
-#define PORTSEARCH_VERSION	"1.0.0"
+#define PORTSEARCH_VERSION	"1.1.0"
 
-#define SEARCH_BY_PFILE	0x1
-#define SEARCH_BY_NAME	0x2
+#define SEARCH_BY_PFILE	000001
+#define SEARCH_BY_NAME	000002
+#define SEARCH_BY_KEY	000004
+#define SEARCH_BY_PATH	000010
+#define SEARCH_BY_INFO	000020
+#define SEARCH_BY_MAINT	000040
+#define SEARCH_BY_CAT	000100
+#define SEARCH_BY_FDEP	000200
+#define SEARCH_BY_EDEP	000400
+#define SEARCH_BY_PDEP	001000
+#define SEARCH_BY_BDEP	002000
+#define SEARCH_BY_RDEP	004000
+#define SEARCH_BY_WWW	010000
 
 struct options_t {
 	const char	*portsdir;
@@ -39,6 +50,18 @@ struct options_t {
 	int		search_crit;
 	const char	*search_file;
 	const char	*search_name;
+	const char	*search_key;
+	const char	*search_path;
+	const char	*search_info;
+	const char	*search_maint;
+	const char	*search_cat;
+	const char	*search_fdep;
+	const char	*search_edep;
+	const char	*search_pdep;
+	const char	*search_bdep;
+	const char	*search_rdep;
+	const char	*search_www;
+	int		icase;
 };
 
 #endif  /* PORTSEARCH_H */

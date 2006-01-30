@@ -115,16 +115,9 @@ void s_load_port_plist(struct store_t *s, struct port_t *port);
 /* All searching is done based on extended regular expressions */
 
 /*
- * Add SEARCH_BY_NAME to `matched' member of all ports named like
- * `search_name'
+ * Filter ports, based on opts->search_crit
  */
-void filter_ports_by_name(struct store_t *s, const char *search_name);
-
-/*
- * Add SEARCH_BY_PFILE to `matched' member of all ports that have
- * `search_file' in their plist
- */
-void filter_ports_by_pfile(struct store_t *s, const char *search_file);
+void filter_ports(struct store_t *s, const struct options_t *opts);
 
 #endif  /* STORE_H */
 

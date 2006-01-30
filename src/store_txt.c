@@ -60,7 +60,7 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-__RCSID("$Id: store_txt.c,v 1.14 2006/01/30 12:44:16 dd Exp $");
+__RCSID("$Id: store_txt.c,v 1.15 2006/01/30 16:39:50 dd Exp $");
 
 struct pline_t {
 	unsigned	portid;
@@ -125,6 +125,12 @@ static void add_port_plist(struct store_t *s, const struct port_t *port);
  * Add port's basic data to store
  */
 static void add_port_index(struct store_t *s, const struct port_t *port);
+
+/*
+ * Add SEARCH_BY_PFILE to `matched' member of all ports that have
+ * `search_file' in their plist
+ */
+static void filter_ports_by_pfile(struct store_t *s, const char *search_file);
 
 /*
  * Place plist files that match `arg->re' in the appropriate `plist'
@@ -337,26 +343,144 @@ s_search_end(struct store_t *s)
 }
 
 void
-filter_ports_by_name(struct store_t *s, const char *search_name)
+filter_ports(struct store_t *s, const struct options_t *opts)
 {
 	struct port_t	*cur_port;
-	regex_t		re;
+	regex_t		name_re;
+	regex_t		key_re;
+	regex_t		path_re;
+	regex_t		info_re;
+	regex_t		maint_re;
+	regex_t		cat_re;
+	regex_t		fdep_re;
+	regex_t		edep_re;
+	regex_t		pdep_re;
+	regex_t		bdep_re;
+	regex_t		rdep_re;
+	regex_t		www_re;
+	int		comp_flags;
 	size_t		i;
 
-	xregcomp(&re, search_name, REG_EXTENDED | REG_NOSUB);
+	comp_flags = REG_EXTENDED | REG_NOSUB;
+
+	if (opts->icase)
+		comp_flags |= REG_ICASE;
+
+	if (opts->search_crit & SEARCH_BY_PFILE)
+		filter_ports_by_pfile(s, opts->search_file);
+
+	if (opts->search_crit & SEARCH_BY_NAME)
+		xregcomp(&name_re, opts->search_name, comp_flags);
+	if (opts->search_crit & SEARCH_BY_KEY)
+		xregcomp(&key_re, opts->search_key, comp_flags);
+	if (opts->search_crit & SEARCH_BY_PATH)
+		xregcomp(&path_re, opts->search_path, comp_flags);
+	if (opts->search_crit & SEARCH_BY_INFO)
+		xregcomp(&info_re, opts->search_info, comp_flags);
+	if (opts->search_crit & SEARCH_BY_MAINT)
+		xregcomp(&maint_re, opts->search_maint, comp_flags);
+	if (opts->search_crit & SEARCH_BY_CAT)
+		xregcomp(&cat_re, opts->search_cat, comp_flags);
+	if (opts->search_crit & SEARCH_BY_FDEP)
+		xregcomp(&fdep_re, opts->search_fdep, comp_flags);
+	if (opts->search_crit & SEARCH_BY_EDEP)
+		xregcomp(&edep_re, opts->search_edep, comp_flags);
+	if (opts->search_crit & SEARCH_BY_PDEP)
+		xregcomp(&pdep_re, opts->search_pdep, comp_flags);
+	if (opts->search_crit & SEARCH_BY_BDEP)
+		xregcomp(&bdep_re, opts->search_bdep, comp_flags);
+	if (opts->search_crit & SEARCH_BY_RDEP)
+		xregcomp(&rdep_re, opts->search_rdep, comp_flags);
+	if (opts->search_crit & SEARCH_BY_WWW)
+		xregcomp(&www_re, opts->search_www, comp_flags);
 
 	for (i = 0; i < s->ports.sz; i++)
 		if (s->ports.arr[i] != NULL)
 		{
 			cur_port = s->ports.arr[i];
-			if (regexec(&re, cur_port->pkgname, 0, NULL, 0) == 0)
-				cur_port->matched |= SEARCH_BY_NAME;
+
+			if (opts->search_crit & SEARCH_BY_NAME)
+				if (regexec(&name_re, cur_port->pkgname, 0, NULL, 0) == 0)
+					cur_port->matched |= SEARCH_BY_NAME;
+
+			if (opts->search_crit & SEARCH_BY_KEY)
+				if (regexec(&key_re, cur_port->pkgname, 0, NULL, 0) == 0 ||
+				    regexec(&key_re, cur_port->comment, 0, NULL, 0) == 0 ||
+				    regexec(&key_re, cur_port->fdep, 0, NULL, 0) == 0 ||
+				    regexec(&key_re, cur_port->edep, 0, NULL, 0) == 0 ||
+				    regexec(&key_re, cur_port->pdep, 0, NULL, 0) == 0 ||
+				    regexec(&key_re, cur_port->bdep, 0, NULL, 0) == 0 ||
+				    regexec(&key_re, cur_port->rdep, 0, NULL, 0) == 0)
+					cur_port->matched |= SEARCH_BY_KEY;
+
+			if (opts->search_crit & SEARCH_BY_PATH)
+				if (regexec(&path_re, cur_port->path, 0, NULL, 0) == 0)
+					cur_port->matched |= SEARCH_BY_PATH;
+
+			if (opts->search_crit & SEARCH_BY_INFO)
+				if (regexec(&info_re, cur_port->comment, 0, NULL, 0) == 0)
+					cur_port->matched |= SEARCH_BY_INFO;
+
+			if (opts->search_crit & SEARCH_BY_MAINT)
+				if (regexec(&maint_re, cur_port->maint, 0, NULL, 0) == 0)
+					cur_port->matched |= SEARCH_BY_MAINT;
+
+			if (opts->search_crit & SEARCH_BY_CAT)
+				if (regexec(&cat_re, cur_port->categories, 0, NULL, 0) == 0)
+					cur_port->matched |= SEARCH_BY_CAT;
+
+			if (opts->search_crit & SEARCH_BY_FDEP)
+				if (regexec(&fdep_re, cur_port->fdep, 0, NULL, 0) == 0)
+					cur_port->matched |= SEARCH_BY_FDEP;
+
+			if (opts->search_crit & SEARCH_BY_EDEP)
+				if (regexec(&edep_re, cur_port->edep, 0, NULL, 0) == 0)
+					cur_port->matched |= SEARCH_BY_EDEP;
+
+			if (opts->search_crit & SEARCH_BY_PDEP)
+				if (regexec(&pdep_re, cur_port->pdep, 0, NULL, 0) == 0)
+					cur_port->matched |= SEARCH_BY_PDEP;
+
+			if (opts->search_crit & SEARCH_BY_BDEP)
+				if (regexec(&bdep_re, cur_port->bdep, 0, NULL, 0) == 0)
+					cur_port->matched |= SEARCH_BY_BDEP;
+
+			if (opts->search_crit & SEARCH_BY_RDEP)
+				if (regexec(&rdep_re, cur_port->rdep, 0, NULL, 0) == 0)
+					cur_port->matched |= SEARCH_BY_RDEP;
+
+			if (opts->search_crit & SEARCH_BY_WWW)
+				if (regexec(&www_re, cur_port->www, 0, NULL, 0) == 0)
+					cur_port->matched |= SEARCH_BY_WWW;
 		}
 
-	xregfree(&re);
+	if (opts->search_crit & SEARCH_BY_NAME)
+		xregfree(&name_re);
+	if (opts->search_crit & SEARCH_BY_KEY)
+		xregfree(&key_re);
+	if (opts->search_crit & SEARCH_BY_PATH)
+		xregfree(&path_re);
+	if (opts->search_crit & SEARCH_BY_INFO)
+		xregfree(&info_re);
+	if (opts->search_crit & SEARCH_BY_MAINT)
+		xregfree(&maint_re);
+	if (opts->search_crit & SEARCH_BY_CAT)
+		xregfree(&cat_re);
+	if (opts->search_crit & SEARCH_BY_FDEP)
+		xregfree(&fdep_re);
+	if (opts->search_crit & SEARCH_BY_EDEP)
+		xregfree(&edep_re);
+	if (opts->search_crit & SEARCH_BY_PDEP)
+		xregfree(&pdep_re);
+	if (opts->search_crit & SEARCH_BY_BDEP)
+		xregfree(&bdep_re);
+	if (opts->search_crit & SEARCH_BY_RDEP)
+		xregfree(&rdep_re);
+	if (opts->search_crit & SEARCH_BY_WWW)
+		xregfree(&www_re);
 }
 
-void
+static void
 filter_ports_by_pfile(struct store_t *s, const char *search_file)
 {
 	FILE		*plist_fp;
