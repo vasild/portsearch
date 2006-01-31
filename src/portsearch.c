@@ -47,7 +47,7 @@
 #define OPT_KEY		"key="
 #define OPT_KEY_LEN	4
 
-__RCSID("$Id: portsearch.c,v 1.14 2006/01/31 08:29:42 dd Exp $");
+__RCSID("$Id: portsearch.c,v 1.15 2006/01/31 09:21:24 dd Exp $");
 
 /*
  * Retrieve PORTSDIR using make -V PORTSDIR
@@ -151,7 +151,7 @@ usage()
 	fprintf(stderr, "update/create database:\n");
 	fprintf(stderr, "  %s -u [-H portshome] [-vvv]\n", prog);
 	fprintf(stderr, "\n");
-	fprintf(stderr, "search for ports (based on extended regular expressions):\n");
+	fprintf(stderr, "search for ports (based on extended regular expressions, case sensitive):\n");
 	fprintf(stderr, "  -n name\tby name (%s can be used)\n", OPT_NAME);
 	fprintf(stderr, "  -k key\tby name, comment or dependencies (%s can be used)\n", OPT_KEY);
 	fprintf(stderr, "  -p path\tby path on the filesystem\n");
