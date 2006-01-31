@@ -45,7 +45,7 @@
 #include "vector.h"
 #include "xlibc.h"
 
-__RCSID("$Id: mkdb.c,v 1.16 2006/01/30 12:44:16 dd Exp $");
+__RCSID("$Id: mkdb.c,v 1.17 2006/01/31 16:42:48 dd Exp $");
 
 /* process_indexline parameter */
 struct pi_arg_t {
@@ -145,8 +145,15 @@ static void
 set_portsindex(const char *portsdir)
 {
 	char		*cmd = "make";
+#if __FreeBSD_version >= 500000
 	char *const	args[] = {cmd,
 		"-C", (char *)portsdir, "-V", "INDEXFILE", NULL};
+#else  /* 4.x handles -C differently */
+	char		makefile[PATH_MAX];
+	char *const	args[] = {cmd,
+		"-f", makefile, "-V", "INDEXFILE", NULL};
+	snprintf(makefile, sizeof(makefile), "%s/Makefile", portsdir);
+#endif
 
 	execcmd(cmd, args, _set_portsindex, (void *)portsdir);
 }
@@ -264,9 +271,18 @@ mkplist(struct port_t *port, const struct pi_arg_t *arg)
 	char		our_makefile[PATH_MAX];
 	char		port_makefile[PATH_MAX];
 	char		*cmd = "make";
+#if __FreeBSD_version >= 500000
 	char *const	args[] = {cmd,
 		"-C", port->path, "-f", our_makefile, "-f", port_makefile,
 		"show-plist", NULL};
+#else  /* 4.x handles -C differently */
+	char		curdir_arg[PATH_MAX];
+	char *const	args[] = {cmd,
+		"-C", port->path, curdir_arg,
+		"-f", our_makefile, "-f", port_makefile,
+		"show-plist", NULL};
+	snprintf(curdir_arg, sizeof(curdir_arg), ".CURDIR=%s", port->path);
+#endif
 
 	snprintf(our_makefile, sizeof(our_makefile), "%s/Makefile", DATADIR);
 	snprintf(port_makefile, sizeof(port_makefile), "%s/Makefile", port->path);

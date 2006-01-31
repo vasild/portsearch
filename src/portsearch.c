@@ -47,7 +47,7 @@
 #define OPT_KEY		"key="
 #define OPT_KEY_LEN	4
 
-__RCSID("$Id: portsearch.c,v 1.15 2006/01/31 09:21:24 dd Exp $");
+__RCSID("$Id: portsearch.c,v 1.16 2006/01/31 16:42:48 dd Exp $");
 
 /*
  * Retrieve PORTSDIR using make -V PORTSDIR
@@ -120,8 +120,8 @@ static void
 set_portsdir(struct options_t *opts)
 {
 	char		*cmd = "make";
-	char *const	args[] = {cmd,  /* -f /dev/null suggested by "Matthew D. Fuller" <fullermd@over-yonder.net> */
-		"-f", "/dev/null", "-V", "PORTSDIR", NULL};
+	char *const	args[] = {cmd,
+		"-f", DATADIR "/Makefile", "-V", "PORTSDIR", NULL};
 
 	execcmd(cmd, args, _set_portsdir, opts);
 
