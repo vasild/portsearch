@@ -26,7 +26,6 @@
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
-#include <sys/limits.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
@@ -36,6 +35,7 @@
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,7 +60,7 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-__RCSID("$Id: store_txt.c,v 1.16 2006/01/31 08:29:42 dd Exp $");
+__RCSID("$Id: store_txt.c,v 1.17 2006/01/31 12:50:16 dd Exp $");
 
 struct pline_t {
 	unsigned	portid;
@@ -627,9 +627,9 @@ load_file(const char *filename, char **raw)
 	}
 
 	if (sz != offt)
-		errx(EX_PROTOCOL, "while reading %s: fstat returned %zu bytes "
-		     "for file size but we got %zu from it",
-		     filename, sz, offt);
+		errx(EX_PROTOCOL, "while reading %s: fstat returned %u bytes "
+		     "for file size but we got %u from it",
+		     filename, (unsigned)sz, (unsigned)offt);
 
 	(*raw)[sz] = '\0';
 

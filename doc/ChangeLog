@@ -9,3 +9,10 @@
 
 	* display.c, display.h, portsearch.c, portsearch.h:
 	added support for outputting a predefined subset of fields
+
+	* 1.2.0 released
+
+	* display.c exhaust_fp.c store_txt.c vector.c xlibc.c:
+	fix compilation on 4.x by substituting %zu with %u and a typecast
+
+	* 1.2.1 released

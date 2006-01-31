@@ -34,7 +34,7 @@
 
 #include "exhaust_fp.h"
 
-__RCSID("$Id: exhaust_fp.c,v 1.3 2006/01/30 12:44:16 dd Exp $");
+__RCSID("$Id: exhaust_fp.c,v 1.4 2006/01/31 12:50:16 dd Exp $");
 
 void
 exhaust_fp(FILE *fp, void (*process)(char *, void *), void *process_arg)
@@ -45,7 +45,7 @@ exhaust_fp(FILE *fp, void (*process)(char *, void *), void *process_arg)
 	size_t	buflen;
 
         if ((buf = (char *)malloc(bufsz)) == NULL)
-		err(EX_OSERR, "malloc(): %zu", bufsz);
+		err(EX_OSERR, "malloc(): %u", (unsigned)bufsz);
 
         while (fgets(buf + bufofft, bufsz - bufofft, fp) != NULL)
 	{
@@ -54,7 +54,7 @@ exhaust_fp(FILE *fp, void (*process)(char *, void *), void *process_arg)
 		{
                         bufsz *= 2;
                         if ((buf = realloc(buf, bufsz)) == NULL)
-				err(EX_OSERR, "realloc(): %zu", bufsz);
+				err(EX_OSERR, "realloc(): %u", (unsigned)bufsz);
                         bufofft = buflen;
                         continue;
                 }

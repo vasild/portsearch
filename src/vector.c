@@ -34,7 +34,7 @@
 
 #include "vector.h"
 
-__RCSID("$Id: vector.c,v 1.4 2006/01/30 12:44:16 dd Exp $");
+__RCSID("$Id: vector.c,v 1.5 2006/01/31 12:50:16 dd Exp $");
 
 void
 v_start(struct vector_t *v, size_t initial_sz)
@@ -44,7 +44,7 @@ v_start(struct vector_t *v, size_t initial_sz)
 	malloc_bytes = initial_sz * sizeof(void *);
 
 	if ((v->base = malloc(malloc_bytes)) == NULL)
-		err(EX_OSERR, "malloc(): %zu", malloc_bytes);
+		err(EX_OSERR, "malloc(): %u", (unsigned)malloc_bytes);
 	v->base_sz = initial_sz;
 	v->nelems = 0;
 }
@@ -59,11 +59,11 @@ v_add(struct vector_t *v, const void *data, size_t size)
 		v->base_sz *= 2;
 		realloc_bytes = v->base_sz * sizeof(void *);
 		if ((v->base = realloc(v->base, realloc_bytes)) == NULL)
-			err(EX_OSERR, "realloc(): %zu", realloc_bytes);
+			err(EX_OSERR, "realloc(): %u", (unsigned)realloc_bytes);
 	}
 
 	if ((v->base[v->nelems] = malloc(size)) == NULL)
-		err(EX_OSERR, "malloc(): %zu", size);
+		err(EX_OSERR, "malloc(): %u", (unsigned)size);
 
 	memcpy(v->base[v->nelems], data, size);
 

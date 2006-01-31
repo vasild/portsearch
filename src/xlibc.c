@@ -24,18 +24,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/types.h>
 #include <sys/cdefs.h>
 
 #include <err.h>
-#include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sysexits.h>
+#include <regex.h>
 
 #include "xlibc.h"
 
-__RCSID("$Id: xlibc.c,v 1.5 2006/01/30 12:44:16 dd Exp $");
+__RCSID("$Id: xlibc.c,v 1.6 2006/01/31 12:50:16 dd Exp $");
 
 void *
 xmalloc(size_t size)
@@ -43,7 +44,7 @@ xmalloc(size_t size)
 	void	*ptr;
 
 	if ((ptr = malloc(size)) == NULL)
-		err(EX_OSERR, "malloc(): %zu", size);
+		err(EX_OSERR, "malloc(): %u", (unsigned)size);
 
 	return ptr;
 }
