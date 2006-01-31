@@ -27,7 +27,7 @@
 #ifndef PORTSEARCH_H
 #define PORTSEARCH_H
 
-#define PORTSEARCH_VERSION	"1.1.0"
+#define PORTSEARCH_VERSION	"1.2.0"
 
 #define SEARCH_BY_PFILE	000001
 #define SEARCH_BY_NAME	000002
@@ -41,7 +41,10 @@
 #define SEARCH_BY_PDEP	001000
 #define SEARCH_BY_BDEP	002000
 #define SEARCH_BY_RDEP	004000
-#define SEARCH_BY_WWW	010000
+#define SEARCH_BY_DEP	010000
+#define SEARCH_BY_WWW	020000
+
+#define DFLT_OUTFLDS	"name,path,info,maint,bdep,rdep,www"
 
 struct options_t {
 	const char	*portsdir;
@@ -60,8 +63,10 @@ struct options_t {
 	const char	*search_pdep;
 	const char	*search_bdep;
 	const char	*search_rdep;
+	const char	*search_dep;
 	const char	*search_www;
 	int		icase;
+	const char	*outflds;
 };
 
 #endif  /* PORTSEARCH_H */

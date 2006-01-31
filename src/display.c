@@ -35,17 +35,18 @@
 
 #define ISSET(a, b)	(a & b)
 
-__RCSID("$Id: display.c,v 1.8 2006/01/30 12:44:16 dd Exp $");
+__RCSID("$Id: display.c,v 1.9 2006/01/31 08:29:42 dd Exp $");
 
 void
-display_ports(const struct ports_t *ports, int search_crit)
+display_ports(const struct ports_t *ports, int search_crit,
+	      int outflds[DISP_FLDS_CNT])
 {
 	struct vector_iterator_t	vi;
 	struct port_t			*port;
 	char				*filename;
 	size_t				ports_cnt;
 	size_t				files_cnt;
-	size_t				i;
+	size_t				i, ii;
 
 	for (ports_cnt = files_cnt = i = 0; i < ports->sz; i++)
 		if (ports->arr[i]->matched == search_crit)
@@ -54,16 +55,43 @@ display_ports(const struct ports_t *ports, int search_crit)
 
 			port = ports->arr[i];
 
-			printf("Port:\t%s\n", port->pkgname);
-			printf("Path:\t%s\n", port->path);
-			printf("Info:\t%s\n", port->comment);
-			printf("Maint:\t%s\n", port->maint);
-			//printf("E-deps:\t%s\n", port->edep);
-			//printf("P-deps:\t%s\n", port->pdep);
-			//printf("F-deps:\t%s\n", port->fdep);
-			printf("B-deps:\t%s\n", port->bdep);
-			printf("R-deps:\t%s\n", port->rdep);
-			printf("WWW:\t%s\n", port->www);
+			for (ii = 0; ii < DISP_FLDS_CNT; ii++)
+				switch (outflds[ii])
+				{
+				case DISP_NAME:
+					printf("Port:\t%s\n", port->pkgname);
+					break;
+				case DISP_PATH:
+					printf("Path:\t%s\n", port->path);
+					break;
+				case DISP_INFO:
+					printf("Info:\t%s\n", port->comment);
+					break;
+				case DISP_MAINT:
+					printf("Maint:\t%s\n", port->maint);
+					break;
+				case DISP_CAT:
+					printf("Index:\t%s\n", port->categories);
+					break;
+				case DISP_FDEP:
+					printf("F-deps:\t%s\n", port->fdep);
+					break;
+				case DISP_EDEP:
+					printf("E-deps:\t%s\n", port->edep);
+					break;
+				case DISP_PDEP:
+					printf("P-deps:\t%s\n", port->pdep);
+					break;
+				case DISP_BDEP:
+					printf("B-deps:\t%s\n", port->bdep);
+					break;
+				case DISP_RDEP:
+					printf("R-deps:\t%s\n", port->rdep);
+					break;
+				case DISP_WWW:
+					printf("WWW:\t%s\n", port->www);
+					break;
+				}
 
 			if (ISSET(SEARCH_BY_PFILE, search_crit))
 			{

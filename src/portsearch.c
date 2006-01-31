@@ -40,13 +40,14 @@
 #include "portdef.h"
 #include "portsearch.h"
 #include "store.h"
+#include "xlibc.h"
 
 #define OPT_NAME	"name="
 #define OPT_NAME_LEN	5
 #define OPT_KEY		"key="
 #define OPT_KEY_LEN	4
 
-__RCSID("$Id: portsearch.c,v 1.13 2006/01/30 16:39:50 dd Exp $");
+__RCSID("$Id: portsearch.c,v 1.14 2006/01/31 08:29:42 dd Exp $");
 
 /*
  * Retrieve PORTSDIR using make -V PORTSDIR
@@ -60,15 +61,20 @@ static void _set_portsdir(char *line, void *arg);
 static void usage();
 
 /*
- * Print version information and exit
- */
-static void print_version();
-
-/*
  * Parse command line options and store results in `opts',
  * calls usage() if incorrect options are given
  */
 static void parse_opts(int argc, char **argv, struct options_t *opts);
+
+/*
+ * Parse output fields
+ */
+static void parse_outflds(const char *outflds, int flds[DISP_FLDS_CNT]);
+
+/*
+ * Print version information and exit
+ */
+static void print_version();
 
 /***/
 
@@ -77,6 +83,7 @@ main(int argc, char **argv)
 {
 	struct options_t	opts;
 	struct store_t		*store;
+	int			outflds[DISP_FLDS_CNT];
 
 	memset(&opts, 0, sizeof(opts));
 
@@ -91,13 +98,15 @@ main(int argc, char **argv)
 		if (!s_exists(NULL))
 			errx(EX_USAGE, "Database does not exist, please create it first using the -u option");
 
+		parse_outflds(opts.outflds, outflds);
+
 		alloc_store(&store);
 
 		s_search_start(store);
 
 		filter_ports(store, &opts);
 
-		display_ports(get_ports(store), opts.search_crit);
+		display_ports(get_ports(store), opts.search_crit, outflds);
 
 		s_search_end(store);
 
@@ -143,12 +152,12 @@ usage()
 	fprintf(stderr, "  %s -u [-H portshome] [-vvv]\n", prog);
 	fprintf(stderr, "\n");
 	fprintf(stderr, "search for ports (based on extended regular expressions):\n");
-	fprintf(stderr, "  -n name\tby name (%s can be used instead of -n)\n", OPT_NAME);
-	fprintf(stderr, "  -k key\tby name, comment or dependencies\n");
+	fprintf(stderr, "  -n name\tby name (%s can be used)\n", OPT_NAME);
+	fprintf(stderr, "  -k key\tby name, comment or dependencies (%s can be used)\n", OPT_KEY);
 	fprintf(stderr, "  -p path\tby path on the filesystem\n");
 	fprintf(stderr, "  -i info\tby info (comment)\n");
 	fprintf(stderr, "  -m maint\tby maintainer\n");
-	fprintf(stderr, "  -c category\tby category\n");
+	fprintf(stderr, "  -c cat\tby category\n");
 	fprintf(stderr, "  -F fdep\tby fetch dependencies\n");
 	fprintf(stderr, "  -E edep\tby extract dependencies\n");
 	fprintf(stderr, "  -P pdep\tby patch dependencies\n");
@@ -158,6 +167,7 @@ usage()
 	fprintf(stderr, "  -w www\tby www site\n");
 	fprintf(stderr, "  -f file\tthat install file\n");
 	fprintf(stderr, "  -I\t\tignore case\n");
+	fprintf(stderr, "  -o fields\toutput fields, default: %s\n", DFLT_OUTFLDS);
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -V\t\tprint version information\n");
 
@@ -165,19 +175,15 @@ usage()
 }
 
 static void
-print_version()
-{
-	printf("portsearch %s\n", PORTSEARCH_VERSION);
-	exit(EX_OK);
-}
-
-static void
 parse_opts(int argc, char **argv, struct options_t *opts)
 {
 	int	ch;
 
+	opts->outflds = DFLT_OUTFLDS;
+
 	while ((ch = getopt(argc, argv,
-			    "vuH:" "n:k:p:i:m:c:F:E:P:B:R:w:f:I" "Vh")) != -1)
+			    "vuH:" "n:k:p:i:m:c:F:E:P:B:R:D:w:f:Io:" "Vh"))
+	       != -1)
 		switch (ch)
 		{
 		case 'v':
@@ -233,6 +239,10 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 			opts->search_crit |= SEARCH_BY_RDEP;
 			opts->search_rdep = optarg;
 			break;
+		case 'D':
+			opts->search_crit |= SEARCH_BY_DEP;
+			opts->search_dep = optarg;
+			break;
 		case 'w':
 			opts->search_crit |= SEARCH_BY_WWW;
 			opts->search_www = optarg;
@@ -243,6 +253,9 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 			break;
 		case 'I':
 			opts->icase = 1;
+			break;
+		case 'o':
+			opts->outflds = optarg;
 			break;
 		case 'V':
 			print_version();
@@ -276,6 +289,57 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 
 	if (opts->update_db && opts->search_crit)
 		usage();
+}
+
+static void
+parse_outflds(const char *outflds, int flds[DISP_FLDS_CNT])
+{
+	char	*p, *p_bak, *fld;
+	int	i;
+
+	for (i = 0; i < DISP_FLDS_CNT; i++)
+		flds[i] = DISP_NONE;
+
+	p = p_bak = xstrdup(outflds);
+
+	i = 0;
+	while ((fld = strsep(&p, ",")) != NULL)
+	{
+		if (strcmp(fld, "name") == 0)
+			flds[i] = DISP_NAME;
+		else if (strcmp(fld, "path") == 0)
+			flds[i] = DISP_PATH;
+		else if (strcmp(fld, "info") == 0)
+			flds[i] = DISP_INFO;
+		else if (strcmp(fld, "maint") == 0)
+			flds[i] = DISP_MAINT;
+		else if (strcmp(fld, "cat") == 0)
+			flds[i] = DISP_CAT;
+		else if (strcmp(fld, "fdep") == 0)
+			flds[i] = DISP_FDEP;
+		else if (strcmp(fld, "edep") == 0)
+			flds[i] = DISP_EDEP;
+		else if (strcmp(fld, "pdep") == 0)
+			flds[i] = DISP_PDEP;
+		else if (strcmp(fld, "bdep") == 0)
+			flds[i] = DISP_BDEP;
+		else if (strcmp(fld, "rdep") == 0)
+			flds[i] = DISP_RDEP;
+		else if (strcmp(fld, "www") == 0)
+			flds[i] = DISP_WWW;
+		else
+			errx(EX_USAGE, "Unknown output field: %s", fld);
+		i++;
+	}
+
+	xfree(p_bak);
+}
+
+static void
+print_version()
+{
+	printf("portsearch %s\n", PORTSEARCH_VERSION);
+	exit(EX_OK);
 }
 
 /* EOF */

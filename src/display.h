@@ -30,7 +30,23 @@
 #include "portdef.h"
 #include "portsearch.h"
 
-void display_ports(const struct ports_t *ports, int search_crit);
+#define DISP_NONE	0
+#define DISP_NAME	1
+#define DISP_PATH	2
+#define DISP_INFO	3
+#define DISP_MAINT	4
+#define DISP_CAT	5
+#define DISP_FDEP	6
+#define DISP_EDEP	7
+#define DISP_PDEP	8
+#define DISP_BDEP	9
+#define DISP_RDEP	10
+#define DISP_WWW	11
+
+#define DISP_FLDS_CNT	11
+
+void display_ports(const struct ports_t *ports, int search_crit,
+		   int outflds[DISP_FLDS_CNT]);
 
 #endif  /* DISPLAY_H */
 

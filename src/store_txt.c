@@ -60,7 +60,7 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-__RCSID("$Id: store_txt.c,v 1.15 2006/01/30 16:39:50 dd Exp $");
+__RCSID("$Id: store_txt.c,v 1.16 2006/01/31 08:29:42 dd Exp $");
 
 struct pline_t {
 	unsigned	portid;
@@ -357,6 +357,7 @@ filter_ports(struct store_t *s, const struct options_t *opts)
 	regex_t		pdep_re;
 	regex_t		bdep_re;
 	regex_t		rdep_re;
+	regex_t		dep_re;
 	regex_t		www_re;
 	int		comp_flags;
 	size_t		i;
@@ -393,6 +394,8 @@ filter_ports(struct store_t *s, const struct options_t *opts)
 		xregcomp(&rdep_re, opts->search_rdep, comp_flags);
 	if (opts->search_crit & SEARCH_BY_WWW)
 		xregcomp(&www_re, opts->search_www, comp_flags);
+	if (opts->search_crit & SEARCH_BY_DEP)
+		xregcomp(&dep_re, opts->search_dep, comp_flags);
 
 	for (i = 0; i < s->ports.sz; i++)
 		if (s->ports.arr[i] != NULL)
@@ -448,6 +451,11 @@ filter_ports(struct store_t *s, const struct options_t *opts)
 			if (opts->search_crit & SEARCH_BY_RDEP)
 				if (regexec(&rdep_re, cur_port->rdep, 0, NULL, 0) == 0)
 					cur_port->matched |= SEARCH_BY_RDEP;
+
+			if (opts->search_crit & SEARCH_BY_DEP)
+				if (regexec(&dep_re, cur_port->bdep, 0, NULL, 0) == 0 ||
+				    regexec(&dep_re, cur_port->rdep, 0, NULL, 0) == 0)
+					cur_port->matched |= SEARCH_BY_DEP;
 
 			if (opts->search_crit & SEARCH_BY_WWW)
 				if (regexec(&www_re, cur_port->www, 0, NULL, 0) == 0)
