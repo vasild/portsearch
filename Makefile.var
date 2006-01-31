@@ -1,7 +1,7 @@
 #
 # Portsearch
 #
-# $Id: Makefile.var,v 1.2 2006/01/17 07:21:03 dd Exp $
+# $Id: Makefile.var,v 1.3 2006/01/31 12:45:35 dd Exp $
 #
 
 PREFIX?=	/usr/local
@@ -19,7 +19,7 @@ CFLAGS+=	-Wall
 
 .if defined(DEBUG) || defined(WITH_DEBUG)
 CFLAGS+=	-Werror
-CFLAGS:=	${CFLAGS:C/-O[023s]//g} -g
+CFLAGS:=	${CFLAGS:C/-O[023s]?//g} -g
 STRIP=
 .else
 STRIP?=	-s
