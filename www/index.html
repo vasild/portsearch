@@ -1,0 +1,48 @@
+<html>
+
+<head>
+<title>portsearch</title>
+</head>
+
+<body>
+
+<center><font size=+1><b>PORTSEARCH</b></font></center><br>
+<br>
+
+<u>Missions:</u><br>
+* Allow searching for ports that install some file, like <nobr><i>find /usr/ports -name pkg-plist |xargs grep pattern</i></nobr><br>
+* Be as fast as possible<br>
+* Do everything that can be done with <i>make search</i> in the ports directory and with <i>/usr/ports/Tools/scripts/portsearch</i> so it is possible to use one tool for all kinds of searching<br>
+<br>
+
+<u>Current features:</u><br>
+* Stores the packing lists of all ports in its own database, allowing fast search and report<br>
+* Incremental updates of its database in addition to database creation from scratch. While database creation is relatively slow operation (as slow as <i>make index</i> or even slower) portsearch supports incremental database updating, generating only the packing lists of the ports that have changed since the last database creation/update. This speeds up creating an up to date database to a reasonable amount of time, once an old database is present.<br>
+* Allows searching by name, key (name, comment or dependencies), path, info (comment), maintainer, category, fetch, extract, patch, build and run dependencies, www site and <b>packing list file</b><br>
+<br>
+
+<u>Pre-history:</u><br>
+Once upon a time I got tired of typing commands that wrapped on the screen for searching a port that installs a given file and waiting thousands of seconds for the operation to complete. This appeared to be a common task, so I did something like <nobr><i>cat /usr/ports/*/*/pkg-plist &gt; /tmp/plist-all</i></nobr>, but this had some major flaws like missing the <i>PLIST_(FILES|DIRS)</i> variables in Makefiles and not expanding <i>%%FOOBAR%%</i> variables. So I wrote simple 50-70 lines sh script that used <i>generate-plist</i> target which worked ok for a while, but as it got complex with incremental updates and other extensions it also got slow. Then I decied to use the big gun and wrote it in C. That's how portsearch appeared.<br>
+<br>
+
+<u>Flaws:</u><br>
+Some ports generate their plists after being installed, making it impossible to record the plist without fetching the source tarballs, compiling and installing the software. Currently for these ports empty or flawed plists are recorded. One way to fix this problem is to retrieve the plists for these ports from the precompiled packages available at ftp.freebsd.org but the whole packages need to be fetched, causing (large) amount of unefficient network traffic.<br>
+<br>
+
+<u>About the name:</u><br>
+I choose <i>portsearch</i> for obvious reasons. It will not interfere with any existing software, particularly <i>/usr/ports/Tools/scripts/portsearch</i> as the tool installs in /usr/local/bin/ and /usr/ports/Tools/scripts/ is not in the <i>PATH</i> by default. On 23 Dec 2005 I emailed the author of <i>scripts/portsearch</i> <nobr>Mark Ovens &lt;marko@&gt;</nobr> and asked him if he has something against a tool with the same name to exist in /usr/local/bin/. I got no answer since then.<br>
+<br>
+
+<u>Download:</u><br>
+Current version is <a href="ftp://ftp.FreeBSD.org/pub/FreeBSD/ports/local-distfiles/vd/portsearch/portsearch-1.2.0.tar.gz">1.2.0</a>, released on 31 Jan 2006<br>
+FreeBSD Port is also <a href="http://cvsweb.freebsd.org/ports/sysutils/portsearch">available</a>.<br>
+<br>
+
+<u>Author:</u><br>
+Vasil Dimov &lt;vd@FreeBSD.orrg&gt;<br>
+<br>
+<font size=-1><i>$Id: index.html,v 1.1 2006/01/31 10:17:08 dd Exp $</i></font>
+
+</body>
+
+</html>
