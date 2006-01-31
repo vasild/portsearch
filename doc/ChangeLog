@@ -1,0 +1,8 @@
+2006-01-31	Vasil Dimov <vd@FreeBSD.org>
+
+	* Makefile: `all' target added to make the FreeBSD port even simpler
+	does the same as the build target
+
+2006-01-31	Vasil Dimov <vd@FreeBSD.org>
+
+	* ChangeLog: added
