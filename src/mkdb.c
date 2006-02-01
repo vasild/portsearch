@@ -33,6 +33,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <sysexits.h>
+#if __FreeBSD_version < 500000
+/* we use chdir(2) on 4.x */
+#include <unistd.h>
+#endif
 
 #include "execcmd.h"
 #include "exhaust_fp.h"
@@ -45,7 +49,7 @@
 #include "vector.h"
 #include "xlibc.h"
 
-__RCSID("$Id: mkdb.c,v 1.17 2006/01/31 16:42:48 dd Exp $");
+__RCSID("$Id: mkdb.c,v 1.18 2006/02/01 07:32:20 dd Exp $");
 
 /* process_indexline parameter */
 struct pi_arg_t {
@@ -282,6 +286,9 @@ mkplist(struct port_t *port, const struct pi_arg_t *arg)
 		"-f", our_makefile, "-f", port_makefile,
 		"show-plist", NULL};
 	snprintf(curdir_arg, sizeof(curdir_arg), ".CURDIR=%s", port->path);
+
+	/* math/vecfem does .include <Makefile.inc>, no hope for this on 4.x */
+	chdir(port->path);
 #endif
 
 	snprintf(our_makefile, sizeof(our_makefile), "%s/Makefile", DATADIR);
