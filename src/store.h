@@ -77,7 +77,7 @@ void s_add_port(struct store_t *s, const struct port_t *port);
 /*
  * Initialize store for reading, independent of s_upd_start()
  * Either this or s_search_start must be called
- * Loads both index and plist files
+ * Loads both index and plist databases
  */
 void s_read_start(struct store_t *s);
 
@@ -89,7 +89,7 @@ void s_read_end(struct store_t *s);
 /*
  * Initialize store for searching
  * Either this or s_read_start must be called
- * Loads only the index file
+ * Loads only the index database
  */
 void s_search_start(struct store_t *s);
 
