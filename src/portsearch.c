@@ -47,7 +47,7 @@
 #define OPT_KEY		"key="
 #define OPT_KEY_LEN	4
 
-__RCSID("$Id: portsearch.c,v 1.16 2006/01/31 16:42:48 dd Exp $");
+__RCSID("$Id: portsearch.c,v 1.17 2006/03/27 12:36:55 dd Exp $");
 
 /*
  * Retrieve PORTSDIR using make -V PORTSDIR
@@ -182,81 +182,83 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 	opts->outflds = DFLT_OUTFLDS;
 
 	while ((ch = getopt(argc, argv,
-			    "vuH:" "n:k:p:i:m:c:F:E:P:B:R:D:w:f:Io:" "Vh"))
+			    "H:uv" "B:D:E:F:IP:R:c:f:i:k:m:n:o:p:w:" "Vh"))
 	       != -1)
 		switch (ch)
 		{
-		case 'v':
-			opts->verbose++;
+		case 'H':
+			opts->portsdir = optarg;
 			break;
 		case 'u':
 			opts->update_db = 1;
 			break;
-		case 'H':
-			opts->portsdir = optarg;
+		case 'v':
+			opts->verbose++;
 			break;
-		case 'n':
-			opts->search_crit |= SEARCH_BY_NAME;
-			opts->search_name = optarg;
-			break;
-		case 'k':
-			opts->search_crit |= SEARCH_BY_KEY;
-			opts->search_key = optarg;
-			break;
-		case 'p':
-			opts->search_crit |= SEARCH_BY_PATH;
-			opts->search_path = optarg;
-			break;
-		case 'i':
-			opts->search_crit |= SEARCH_BY_INFO;
-			opts->search_info = optarg;
-			break;
-		case 'm':
-			opts->search_crit |= SEARCH_BY_MAINT;
-			opts->search_maint = optarg;
-			break;
-		case 'c':
-			opts->search_crit |= SEARCH_BY_CAT;
-			opts->search_cat = optarg;
-			break;
-		case 'F':
-			opts->search_crit |= SEARCH_BY_FDEP;
-			opts->search_fdep = optarg;
-			break;
-		case 'E':
-			opts->search_crit |= SEARCH_BY_EDEP;
-			opts->search_edep = optarg;
-			break;
-		case 'P':
-			opts->search_crit |= SEARCH_BY_PDEP;
-			opts->search_pdep = optarg;
-			break;
+
 		case 'B':
 			opts->search_crit |= SEARCH_BY_BDEP;
 			opts->search_bdep = optarg;
-			break;
-		case 'R':
-			opts->search_crit |= SEARCH_BY_RDEP;
-			opts->search_rdep = optarg;
 			break;
 		case 'D':
 			opts->search_crit |= SEARCH_BY_DEP;
 			opts->search_dep = optarg;
 			break;
-		case 'w':
-			opts->search_crit |= SEARCH_BY_WWW;
-			opts->search_www = optarg;
+		case 'E':
+			opts->search_crit |= SEARCH_BY_EDEP;
+			opts->search_edep = optarg;
+			break;
+		case 'F':
+			opts->search_crit |= SEARCH_BY_FDEP;
+			opts->search_fdep = optarg;
+			break;
+		case 'I':
+			opts->icase = 1;
+			break;
+		case 'P':
+			opts->search_crit |= SEARCH_BY_PDEP;
+			opts->search_pdep = optarg;
+			break;
+		case 'R':
+			opts->search_crit |= SEARCH_BY_RDEP;
+			opts->search_rdep = optarg;
+			break;
+		case 'c':
+			opts->search_crit |= SEARCH_BY_CAT;
+			opts->search_cat = optarg;
 			break;
 		case 'f':
 			opts->search_crit |= SEARCH_BY_PFILE;
 			opts->search_file = optarg;
 			break;
-		case 'I':
-			opts->icase = 1;
+		case 'i':
+			opts->search_crit |= SEARCH_BY_INFO;
+			opts->search_info = optarg;
+			break;
+		case 'k':
+			opts->search_crit |= SEARCH_BY_KEY;
+			opts->search_key = optarg;
+			break;
+		case 'm':
+			opts->search_crit |= SEARCH_BY_MAINT;
+			opts->search_maint = optarg;
+			break;
+		case 'n':
+			opts->search_crit |= SEARCH_BY_NAME;
+			opts->search_name = optarg;
 			break;
 		case 'o':
 			opts->outflds = optarg;
 			break;
+		case 'p':
+			opts->search_crit |= SEARCH_BY_PATH;
+			opts->search_path = optarg;
+			break;
+		case 'w':
+			opts->search_crit |= SEARCH_BY_WWW;
+			opts->search_www = optarg;
+			break;
+
 		case 'V':
 			print_version();
 			/* NOT REACHED */
