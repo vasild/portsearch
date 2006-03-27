@@ -43,6 +43,7 @@
 #define SEARCH_BY_RDEP	004000
 #define SEARCH_BY_DEP	010000
 #define SEARCH_BY_WWW	020000
+#define SEARCH_BY_PFILE_BASENAME	040000
 
 #define DFLT_OUTFLDS	"name,path,info,maint,bdep,rdep,www"
 
