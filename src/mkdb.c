@@ -49,7 +49,7 @@
 #include "vector.h"
 #include "xlibc.h"
 
-__RCSID("$Id: mkdb.c,v 1.18 2006/02/01 07:32:20 dd Exp $");
+__RCSID("$Id: mkdb.c,v 1.19 2006/03/28 07:45:33 dd Exp $");
 
 /* process_indexline parameter */
 struct pi_arg_t {
@@ -129,7 +129,7 @@ mkdb(const struct options_t *opts)
 		logmsg(L_NOTICE, opts->verbose,
 		       "Previous store does not exist, creating from scratch\n");
 
-	s_upd_start(arg.store);
+	s_new_start(arg.store);
 
 	portsindex_fp = xfopen(portsindex, "r");
 
@@ -137,7 +137,7 @@ mkdb(const struct options_t *opts)
 
 	xfclose(portsindex_fp, portsindex);
 
-	s_upd_end(arg.store);
+	s_new_end(arg.store);
 
 	if (arg.s_exists)
 		s_read_end(arg.store);

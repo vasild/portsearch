@@ -58,26 +58,28 @@ struct ports_t *get_ports(struct store_t *s);
 /* store manipulation procedures */
 
 /*
- * Initialize store for updating, independent of s_read_start()
+ * Initialize a temporary new store, do not touch the current one
+ * Independent of s_read_start()
  */
-void s_upd_start(struct store_t *s);
+void s_new_start(struct store_t *s);
 
 /*
- * Close store from updating
+ * Close the temporary new store and replace the current one with it
  */
-void s_upd_end(struct store_t *s);
+void s_new_end(struct store_t *s);
 
 /*
- * Add port to store
+ * Add a port to the temporary store created by s_new_start()
  */
 void s_add_port(struct store_t *s, const struct port_t *port);
 
 /* store reading procedures */
 
 /*
- * Initialize store for reading, independent of s_upd_start()
+ * Initialize store for reading, independent of s_new_start()
  * Either this or s_search_start must be called
- * Loads both index and plist databases
+ * s_load_port_by_path() and s_load_port_plist() can be used when this
+ * function is called
  */
 void s_read_start(struct store_t *s);
 
@@ -88,7 +90,7 @@ void s_read_end(struct store_t *s);
 
 /*
  * Initialize store for searching
- * Either this or s_read_start must be called
+ * Either this or s_read_start can be called, but not both
  * Loads only the index database
  */
 void s_search_start(struct store_t *s);
@@ -115,7 +117,9 @@ void s_load_port_plist(struct store_t *s, struct port_t *port);
 /* All searching is done based on extended regular expressions */
 
 /*
- * Filter ports, based on opts->search_crit
+ * Filter internal ports structure (that can be retrieved with get_ports()),
+ * so that all non-NULL members get their `matched' member properly
+ * initialized based on opts->search_crit
  */
 void filter_ports(struct store_t *s, const struct options_t *opts);
 

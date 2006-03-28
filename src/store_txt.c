@@ -60,7 +60,7 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-__RCSID("$Id: store_txt.c,v 1.17 2006/01/31 12:50:16 dd Exp $");
+__RCSID("$Id: store_txt.c,v 1.18 2006/03/28 07:45:33 dd Exp $");
 
 struct pline_t {
 	unsigned	portid;
@@ -227,7 +227,7 @@ get_ports(struct store_t *s)
 }
 
 void
-s_upd_start(struct store_t *s)
+s_new_start(struct store_t *s)
 {
 	const char	*mkdirs[] = {DBDIR, s->newdir};
 	int		i;
@@ -247,7 +247,7 @@ s_upd_start(struct store_t *s)
 }
 
 void
-s_upd_end(struct store_t *s)
+s_new_end(struct store_t *s)
 {
 	/* close newly created db files */
 	xfclose(s->index_new_fp, s->index_new_fn);
