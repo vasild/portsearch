@@ -32,6 +32,8 @@
 #include "portdef.h"
 #include "portsearch.h"
 
+#define DBDIR	"/var/db/portsearch"
+
 struct store_t;
 
 /*
