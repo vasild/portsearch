@@ -49,7 +49,7 @@
 #include "vector.h"
 #include "xlibc.h"
 
-__RCSID("$Id: mkdb.c,v 1.19 2006/03/28 07:45:33 dd Exp $");
+__RCSID("$Id: mkdb.c,v 1.20 2006/04/27 08:50:33 dd Exp $");
 
 /* process_indexline parameter */
 struct pi_arg_t {
@@ -119,11 +119,12 @@ mkdb(const struct options_t *opts)
 
 	alloc_store(&arg.store);
 
-	if ((arg.s_exists = s_exists(NULL)))
+	arg.s_exists = s_exists(NULL);
+	if (arg.s_exists)
 	{
+		s_read_start(arg.store);
 		logmsg(L_NOTICE, opts->verbose,
 		       "Using data from existent store\n");
-		s_read_start(arg.store);
 	}
 	else
 		logmsg(L_NOTICE, opts->verbose,
@@ -180,7 +181,7 @@ process_indexline(char *line, void *arg_void)
 
 	parse_indexln(&addport);
 
-#define TEST	0
+#define TEST	1
 
 #if TEST
 	if (strncmp("/usr/ports/archivers", addport.path, 20) == 0)
@@ -204,7 +205,7 @@ set_port_data(struct port_t *port, const struct pi_arg_t *arg)
 {
 	static unsigned	portid = 1;
 
-	const char	*spath;
+	const char	*spath;  /* short path: /usr/ports/a/b -> a/b */
 	const char	*pkgver_index;
 	const char	*pkgver_store;
 
