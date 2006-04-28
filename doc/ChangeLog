@@ -29,4 +29,8 @@
 	* store_txt.c:
 	bugfix: do not ignore -I option for pfiles
 
+2006-04-28	Vasil Dimov <vd@FreeBSD.org>
+
+	* 1.2.3 released
+
 EOF
