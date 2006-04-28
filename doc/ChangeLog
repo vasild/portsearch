@@ -16,3 +16,17 @@
 	fix compilation on 4.x by substituting %zu with %u and a typecast
 
 	* 1.2.1 released
+
+	* 1.2.2 released
+
+2006-03-27	Vasil Dimov <vd@FreeBSD.org>
+
+	* portsearch.c portsearch.h:
+	added -b option
+
+2006-04-27	Vasil Dimov <vd@FreeBSD.org>
+
+	* store_txt.c:
+	bugfix: do not ignore -I option for pfiles
+
+EOF
