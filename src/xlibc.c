@@ -36,7 +36,7 @@
 
 #include "xlibc.h"
 
-__RCSID("$Id: xlibc.c,v 1.6 2006/01/31 12:50:16 dd Exp $");
+__RCSID("$Id: xlibc.c,v 1.5.6.1 2006/04/28 09:59:53 dd Exp $");
 
 void *
 xmalloc(size_t size)

@@ -1,11 +1,10 @@
 #
 # Portsearch
 #
-# $Id: Makefile.var,v 1.4 2006/04/27 08:44:46 dd Exp $
+# $Id: Makefile.var,v 1.2.10.1 2006/04/28 09:59:53 dd Exp $
 #
 
-LOCALBASE?=	/usr/local
-PREFIX?=	${LOCALBASE}
+PREFIX?=	/usr/local
 DATADIR?=	${PREFIX}/share/portsearch
 
 INSTALL?=	install

@@ -51,6 +51,8 @@
 #include "vector.h"
 #include "xlibc.h"
 
+#define DBDIR	"/var/db/portsearch"
+
 #define RSi	'\n'  /* record separator for index file */
 #define FSi	'|'  /* field separator for index file */
 
@@ -58,7 +60,7 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-__RCSID("$Id: store_txt.c,v 1.19 2006/04/27 08:53:15 dd Exp $");
+__RCSID("$Id: store_txt.c,v 1.16.4.1 2006/04/28 09:59:53 dd Exp $");
 
 struct pline_t {
 	unsigned	portid;
@@ -128,8 +130,7 @@ static void add_port_index(struct store_t *s, const struct port_t *port);
  * Add SEARCH_BY_PFILE to `matched' member of all ports that have
  * `search_file' in their plist
  */
-static void filter_ports_by_pfile(struct store_t *s, const char *search_file,
-				  int comp_flags);
+static void filter_ports_by_pfile(struct store_t *s, const char *search_file);
 
 /*
  * Place plist files that match `arg->re' in the appropriate `plist'
@@ -226,7 +227,7 @@ get_ports(struct store_t *s)
 }
 
 void
-s_new_start(struct store_t *s)
+s_upd_start(struct store_t *s)
 {
 	const char	*mkdirs[] = {DBDIR, s->newdir};
 	int		i;
@@ -246,7 +247,7 @@ s_new_start(struct store_t *s)
 }
 
 void
-s_new_end(struct store_t *s)
+s_upd_end(struct store_t *s)
 {
 	/* close newly created db files */
 	xfclose(s->index_new_fp, s->index_new_fn);
@@ -367,7 +368,7 @@ filter_ports(struct store_t *s, const struct options_t *opts)
 		comp_flags |= REG_ICASE;
 
 	if (opts->search_crit & SEARCH_BY_PFILE)
-		filter_ports_by_pfile(s, opts->search_file, comp_flags);
+		filter_ports_by_pfile(s, opts->search_file);
 
 	if (opts->search_crit & SEARCH_BY_NAME)
 		xregcomp(&name_re, opts->search_name, comp_flags);
@@ -488,15 +489,14 @@ filter_ports(struct store_t *s, const struct options_t *opts)
 }
 
 static void
-filter_ports_by_pfile(struct store_t *s, const char *search_file,
-		      int comp_flags)
+filter_ports_by_pfile(struct store_t *s, const char *search_file)
 {
 	FILE		*plist_fp;
 	struct garg_t	garg;
 
 	garg.store = s;
 
-	xregcomp(&garg.re, search_file, comp_flags);
+	xregcomp(&garg.re, search_file, REG_EXTENDED | REG_NOSUB);
 
 	plist_fp = xfopen(s->plist_fn, "r");
 

@@ -16,10 +16,3 @@
 	fix compilation on 4.x by substituting %zu with %u and a typecast
 
 	* 1.2.1 released
-
-2006-03-27	Vasil Dimov <vd@FreeBSD.org>
-
-	* portsearch.c, portsearch.h:
-	added -b option for searching against packing list file's
-	basename. Does the same as -f '/file$', I just got tired of typing
-	the later.

@@ -35,7 +35,7 @@
 
 #define ISSET(a, b)	(a & b)
 
-__RCSID("$Id: display.c,v 1.10 2006/01/31 12:50:16 dd Exp $");
+__RCSID("$Id: display.c,v 1.9.4.1 2006/04/28 09:59:53 dd Exp $");
 
 void
 display_ports(const struct ports_t *ports, int search_crit,

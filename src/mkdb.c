@@ -49,7 +49,7 @@
 #include "vector.h"
 #include "xlibc.h"
 
-__RCSID("$Id: mkdb.c,v 1.20 2006/04/27 08:50:33 dd Exp $");
+__RCSID("$Id: mkdb.c,v 1.16.6.1 2006/04/28 09:59:53 dd Exp $");
 
 /* process_indexline parameter */
 struct pi_arg_t {
@@ -119,18 +119,17 @@ mkdb(const struct options_t *opts)
 
 	alloc_store(&arg.store);
 
-	arg.s_exists = s_exists(NULL);
-	if (arg.s_exists)
+	if ((arg.s_exists = s_exists(NULL)))
 	{
-		s_read_start(arg.store);
 		logmsg(L_NOTICE, opts->verbose,
 		       "Using data from existent store\n");
+		s_read_start(arg.store);
 	}
 	else
 		logmsg(L_NOTICE, opts->verbose,
 		       "Previous store does not exist, creating from scratch\n");
 
-	s_new_start(arg.store);
+	s_upd_start(arg.store);
 
 	portsindex_fp = xfopen(portsindex, "r");
 
@@ -138,7 +137,7 @@ mkdb(const struct options_t *opts)
 
 	xfclose(portsindex_fp, portsindex);
 
-	s_new_end(arg.store);
+	s_upd_end(arg.store);
 
 	if (arg.s_exists)
 		s_read_end(arg.store);
@@ -181,7 +180,7 @@ process_indexline(char *line, void *arg_void)
 
 	parse_indexln(&addport);
 
-#define TEST	1
+#define TEST	0
 
 #if TEST
 	if (strncmp("/usr/ports/archivers", addport.path, 20) == 0)
@@ -205,7 +204,7 @@ set_port_data(struct port_t *port, const struct pi_arg_t *arg)
 {
 	static unsigned	portid = 1;
 
-	const char	*spath;  /* short path: /usr/ports/a/b -> a/b */
+	const char	*spath;
 	const char	*pkgver_index;
 	const char	*pkgver_store;
 

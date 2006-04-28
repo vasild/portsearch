@@ -34,7 +34,7 @@
 
 #include "vector.h"
 
-__RCSID("$Id: vector.c,v 1.5 2006/01/31 12:50:16 dd Exp $");
+__RCSID("$Id: vector.c,v 1.4.6.1 2006/04/28 09:59:53 dd Exp $");
 
 void
 v_start(struct vector_t *v, size_t initial_sz)

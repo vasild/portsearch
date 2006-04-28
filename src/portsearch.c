@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
 #include <sys/param.h>
 
 #include <err.h>
@@ -46,7 +47,7 @@
 #define OPT_KEY		"key="
 #define OPT_KEY_LEN	4
 
-__RCSID("$Id: portsearch.c,v 1.18 2006/03/27 13:21:55 dd Exp $");
+__RCSID("$Id: portsearch.c,v 1.14.4.1 2006/04/28 09:59:53 dd Exp $");
 
 /*
  * Retrieve PORTSDIR using make -V PORTSDIR
@@ -150,22 +151,21 @@ usage()
 	fprintf(stderr, "update/create database:\n");
 	fprintf(stderr, "  %s -u [-H portshome] [-vvv]\n", prog);
 	fprintf(stderr, "\n");
-	fprintf(stderr, "search for ports (based on extended regular expressions, case sensitive) by:\n");
-	fprintf(stderr, "  -n name\tname (%s can be used)\n", OPT_NAME);
-	fprintf(stderr, "  -k key\tname, comment or dependencies (%s can be used)\n", OPT_KEY);
-	fprintf(stderr, "  -p path\tpath on the filesystem\n");
-	fprintf(stderr, "  -i info\tinfo (comment)\n");
-	fprintf(stderr, "  -m maint\tmaintainer\n");
-	fprintf(stderr, "  -c cat\tcategory\n");
-	fprintf(stderr, "  -F fdep\tfetch dependencies\n");
-	fprintf(stderr, "  -E edep\textract dependencies\n");
-	fprintf(stderr, "  -P pdep\tpatch dependencies\n");
-	fprintf(stderr, "  -B bdep\tbuild dependencies\n");
-	fprintf(stderr, "  -R rdep\trun dependencies\n");
-	fprintf(stderr, "  -D dep\tbuild or run dependencies\n");
-	fprintf(stderr, "  -w www\twww site\n");
-	fprintf(stderr, "  -f file\tpacking list file\n");
-	fprintf(stderr, "  -b file\tpacking list file's basename - same as -f '/file$'\n");
+	fprintf(stderr, "search for ports (based on extended regular expressions, case sensitive):\n");
+	fprintf(stderr, "  -n name\tby name (%s can be used)\n", OPT_NAME);
+	fprintf(stderr, "  -k key\tby name, comment or dependencies (%s can be used)\n", OPT_KEY);
+	fprintf(stderr, "  -p path\tby path on the filesystem\n");
+	fprintf(stderr, "  -i info\tby info (comment)\n");
+	fprintf(stderr, "  -m maint\tby maintainer\n");
+	fprintf(stderr, "  -c cat\tby category\n");
+	fprintf(stderr, "  -F fdep\tby fetch dependencies\n");
+	fprintf(stderr, "  -E edep\tby extract dependencies\n");
+	fprintf(stderr, "  -P pdep\tby patch dependencies\n");
+	fprintf(stderr, "  -B bdep\tby build dependencies\n");
+	fprintf(stderr, "  -R rdep\tby run dependencies\n");
+	fprintf(stderr, "  -D dep\tby build or run dependencies\n");
+	fprintf(stderr, "  -w www\tby www site\n");
+	fprintf(stderr, "  -f file\tthat install file\n");
 	fprintf(stderr, "  -I\t\tignore case\n");
 	fprintf(stderr, "  -o fields\toutput fields, default: %s\n", DFLT_OUTFLDS);
 	fprintf(stderr, "\n");
@@ -182,87 +182,81 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 	opts->outflds = DFLT_OUTFLDS;
 
 	while ((ch = getopt(argc, argv,
-			    "H:uv" "B:D:E:F:IP:R:b:c:f:i:k:m:n:o:p:w:" "Vh"))
+			    "vuH:" "n:k:p:i:m:c:F:E:P:B:R:D:w:f:Io:" "Vh"))
 	       != -1)
 		switch (ch)
 		{
-		case 'H':
-			opts->portsdir = optarg;
+		case 'v':
+			opts->verbose++;
 			break;
 		case 'u':
 			opts->update_db = 1;
 			break;
-		case 'v':
-			opts->verbose++;
-			break;
-
-		case 'B':
-			opts->search_crit |= SEARCH_BY_BDEP;
-			opts->search_bdep = optarg;
-			break;
-		case 'D':
-			opts->search_crit |= SEARCH_BY_DEP;
-			opts->search_dep = optarg;
-			break;
-		case 'E':
-			opts->search_crit |= SEARCH_BY_EDEP;
-			opts->search_edep = optarg;
-			break;
-		case 'F':
-			opts->search_crit |= SEARCH_BY_FDEP;
-			opts->search_fdep = optarg;
-			break;
-		case 'I':
-			opts->icase = 1;
-			break;
-		case 'P':
-			opts->search_crit |= SEARCH_BY_PDEP;
-			opts->search_pdep = optarg;
-			break;
-		case 'R':
-			opts->search_crit |= SEARCH_BY_RDEP;
-			opts->search_rdep = optarg;
-			break;
-		case 'b':
-			opts->search_crit |= SEARCH_BY_PFILE;
-			snprintf(opts->search_file, sizeof(opts->search_file), "/%s$", optarg);
-			break;
-		case 'c':
-			opts->search_crit |= SEARCH_BY_CAT;
-			opts->search_cat = optarg;
-			break;
-		case 'f':
-			opts->search_crit |= SEARCH_BY_PFILE;
-			snprintf(opts->search_file, sizeof(opts->search_file), "%s", optarg);
-			break;
-		case 'i':
-			opts->search_crit |= SEARCH_BY_INFO;
-			opts->search_info = optarg;
-			break;
-		case 'k':
-			opts->search_crit |= SEARCH_BY_KEY;
-			opts->search_key = optarg;
-			break;
-		case 'm':
-			opts->search_crit |= SEARCH_BY_MAINT;
-			opts->search_maint = optarg;
+		case 'H':
+			opts->portsdir = optarg;
 			break;
 		case 'n':
 			opts->search_crit |= SEARCH_BY_NAME;
 			opts->search_name = optarg;
 			break;
-		case 'o':
-			opts->outflds = optarg;
+		case 'k':
+			opts->search_crit |= SEARCH_BY_KEY;
+			opts->search_key = optarg;
 			break;
 		case 'p':
 			opts->search_crit |= SEARCH_BY_PATH;
 			opts->search_path = optarg;
 			break;
+		case 'i':
+			opts->search_crit |= SEARCH_BY_INFO;
+			opts->search_info = optarg;
+			break;
+		case 'm':
+			opts->search_crit |= SEARCH_BY_MAINT;
+			opts->search_maint = optarg;
+			break;
+		case 'c':
+			opts->search_crit |= SEARCH_BY_CAT;
+			opts->search_cat = optarg;
+			break;
+		case 'F':
+			opts->search_crit |= SEARCH_BY_FDEP;
+			opts->search_fdep = optarg;
+			break;
+		case 'E':
+			opts->search_crit |= SEARCH_BY_EDEP;
+			opts->search_edep = optarg;
+			break;
+		case 'P':
+			opts->search_crit |= SEARCH_BY_PDEP;
+			opts->search_pdep = optarg;
+			break;
+		case 'B':
+			opts->search_crit |= SEARCH_BY_BDEP;
+			opts->search_bdep = optarg;
+			break;
+		case 'R':
+			opts->search_crit |= SEARCH_BY_RDEP;
+			opts->search_rdep = optarg;
+			break;
+		case 'D':
+			opts->search_crit |= SEARCH_BY_DEP;
+			opts->search_dep = optarg;
+			break;
 		case 'w':
 			opts->search_crit |= SEARCH_BY_WWW;
 			opts->search_www = optarg;
 			break;
-
+		case 'f':
+			opts->search_crit |= SEARCH_BY_PFILE;
+			opts->search_file = optarg;
+			break;
+		case 'I':
+			opts->icase = 1;
+			break;
+		case 'o':
+			opts->outflds = optarg;
+			break;
 		case 'V':
 			print_version();
 			/* NOT REACHED */
