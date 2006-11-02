@@ -46,7 +46,7 @@
 #define OPT_KEY		"key="
 #define OPT_KEY_LEN	4
 
-__RCSID("$Id: portsearch.c,v 1.18 2006/03/27 13:21:55 dd Exp $");
+__RCSID("$Id: portsearch.c,v 1.19 2006/11/02 16:38:50 dd Exp $");
 
 /*
  * Retrieve PORTSDIR using make -V PORTSDIR
@@ -96,6 +96,10 @@ main(int argc, char **argv)
 	{
 		if (!s_exists(NULL))
 			errx(EX_USAGE, "Database does not exist, please create it first using the -u option");
+
+		if (!ISSET(SEARCH_BY_PFILE, opts.search_crit) &&
+		    strstr(opts.outflds, "rawfiles") != NULL)
+			errx(EX_USAGE, "-o rawfiles is specified without -f or -b");
 
 		parse_outflds(opts.outflds, outflds);
 
@@ -165,9 +169,14 @@ usage()
 	fprintf(stderr, "  -D dep\tbuild or run dependencies\n");
 	fprintf(stderr, "  -w www\twww site\n");
 	fprintf(stderr, "  -f file\tpacking list file\n");
-	fprintf(stderr, "  -b file\tpacking list file's basename - same as -f '/file$'\n");
+	fprintf(stderr, "  -b file\tpacking list file's basename - same as -f '(^|/)file$'\n");
 	fprintf(stderr, "  -I\t\tignore case\n");
 	fprintf(stderr, "  -o fields\toutput fields, default: %s\n", DFLT_OUTFLDS);
+	fprintf(stderr, "\t\tspecial field `rawfiles' outputs only pfiles, one per line\n");
+	fprintf(stderr, "\t\tand can be used only with -f or -b\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "show the recorded plist for one port:\n");
+	fprintf(stderr, "  -L path\tsame as -p path -f '.*' -o rawfiles\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -V\t\tprint version information\n");
 
@@ -178,11 +187,15 @@ static void
 parse_opts(int argc, char **argv, struct options_t *opts)
 {
 	int	ch;
+	int	major_requests;
 
 	opts->outflds = DFLT_OUTFLDS;
 
 	while ((ch = getopt(argc, argv,
-			    "H:uv" "B:D:E:F:IP:R:b:c:f:i:k:m:n:o:p:w:" "Vh"))
+			    "H:uv"
+			    "B:D:E:F:IP:R:b:c:f:i:k:m:n:o:p:w:"
+			    "L:"
+			    "Vh"))
 	       != -1)
 		switch (ch)
 		{
@@ -225,7 +238,7 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 			break;
 		case 'b':
 			opts->search_crit |= SEARCH_BY_PFILE;
-			snprintf(opts->search_file, sizeof(opts->search_file), "/%s$", optarg);
+			snprintf(opts->search_file, sizeof(opts->search_file), "(^|/)%s$", optarg);
 			break;
 		case 'c':
 			opts->search_crit |= SEARCH_BY_CAT;
@@ -263,6 +276,16 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 			opts->search_www = optarg;
 			break;
 
+		case 'L':
+			opts->search_crit |= SEARCH_BY_PFILE;
+			snprintf(opts->search_file, sizeof(opts->search_file), ".*");
+
+			opts->search_crit |= SEARCH_BY_PATH;
+			opts->search_path = optarg;
+
+			opts->outflds = "rawfiles";
+			break;
+
 		case 'V':
 			print_version();
 			/* NOT REACHED */
@@ -290,10 +313,14 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 		else
 			usage();
 
-	if (!opts->update_db && !opts->search_crit)
-		usage();
+	major_requests = 0;
 
-	if (opts->update_db && opts->search_crit)
+	if (opts->update_db)
+		major_requests++;
+	if (opts->search_crit)
+		major_requests++;
+
+	if (major_requests != 1)
 		usage();
 }
 
@@ -311,6 +338,9 @@ parse_outflds(const char *outflds, int flds[DISP_FLDS_CNT])
 	i = 0;
 	while ((fld = strsep(&p, ",")) != NULL)
 	{
+		if (i >= DISP_FLDS_CNT)
+			errx(EX_USAGE, "Too many output fields: %s", outflds);
+
 		if (strcmp(fld, "name") == 0)
 			flds[i] = DISP_NAME;
 		else if (strcmp(fld, "path") == 0)
@@ -333,6 +363,8 @@ parse_outflds(const char *outflds, int flds[DISP_FLDS_CNT])
 			flds[i] = DISP_RDEP;
 		else if (strcmp(fld, "www") == 0)
 			flds[i] = DISP_WWW;
+		else if (strcmp(fld, "rawfiles") == 0)
+			flds[i] = DISP_RAWFILES;
 		else
 			errx(EX_USAGE, "Unknown output field: %s", fld);
 		i++;

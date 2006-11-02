@@ -33,9 +33,7 @@
 #include "portsearch.h"
 #include "vector.h"
 
-#define ISSET(a, b)	(a & b)
-
-__RCSID("$Id: display.c,v 1.10 2006/01/31 12:50:16 dd Exp $");
+__RCSID("$Id: display.c,v 1.11 2006/11/02 16:38:50 dd Exp $");
 
 void
 display_ports(const struct ports_t *ports, int search_crit,
@@ -44,16 +42,35 @@ display_ports(const struct ports_t *ports, int search_crit,
 	struct vector_iterator_t	vi;
 	struct port_t			*port;
 	char				*filename;
+	int				rawfiles_is_on;
 	size_t				ports_cnt;
 	size_t				files_cnt;
 	size_t				i, ii;
 
-	for (ports_cnt = files_cnt = i = 0; i < ports->sz; i++)
+	rawfiles_is_on = 0;
+	for (ii = 0; ii < DISP_FLDS_CNT; ii++)
+		if (outflds[ii] == DISP_RAWFILES)
+		{
+			rawfiles_is_on = 1;
+			break;
+		}
+
+	ports_cnt = 0;
+	files_cnt = 0;
+	for (i = 0; i < ports->sz; i++)
 		if (ports->arr[i]->matched == search_crit)
 		{
 			ports_cnt++;
 
 			port = ports->arr[i];
+
+			if (rawfiles_is_on)
+			{
+				vi_reset(&vi, &port->plist);
+				while (vi_next(&vi, (void **)&filename))
+					printf("%s:%s\n", port->path, filename);
+				continue;
+			}
 
 			for (ii = 0; ii < DISP_FLDS_CNT; ii++)
 				switch (outflds[ii])
@@ -96,7 +113,7 @@ display_ports(const struct ports_t *ports, int search_crit,
 			if (ISSET(SEARCH_BY_PFILE, search_crit))
 			{
 				printf("Files:\t");
-				vi_reset(&vi, &ports->arr[i]->plist);
+				vi_reset(&vi, &port->plist);
 
 				vi_next(&vi, (void **)&filename);
 				files_cnt++;
@@ -113,10 +130,14 @@ display_ports(const struct ports_t *ports, int search_crit,
 
 			printf("\n");
 		}
-	printf("%u ports", (unsigned)ports_cnt);
-	if (ISSET(SEARCH_BY_PFILE, search_crit))
-		printf(", %u files", (unsigned)files_cnt);
-	printf("\n");
+
+	if (!rawfiles_is_on)
+	{
+		printf("%u ports", (unsigned)ports_cnt);
+		if (ISSET(SEARCH_BY_PFILE, search_crit))
+			printf(", %u files", (unsigned)files_cnt);
+		printf("\n");
+	}
 }
 
 /* EOF */

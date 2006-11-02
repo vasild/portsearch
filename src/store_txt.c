@@ -58,7 +58,7 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-__RCSID("$Id: store_txt.c,v 1.19 2006/04/27 08:53:15 dd Exp $");
+__RCSID("$Id: store_txt.c,v 1.20 2006/11/02 16:38:50 dd Exp $");
 
 struct pline_t {
 	unsigned	portid;
@@ -97,6 +97,7 @@ struct store_t {
 struct garg_t {
 	regex_t		re;
 	struct store_t	*store;
+	int		should_have_matched;
 };
 
 /*
@@ -126,10 +127,11 @@ static void add_port_index(struct store_t *s, const struct port_t *port);
 
 /*
  * Add SEARCH_BY_PFILE to `matched' member of all ports that have
- * `search_file' in their plist
+ * `search_file' in their plist. If `should_have_matched' is nonzero than
+ * skip all ports that have `matched' member equal to zero.
  */
-static void filter_ports_by_pfile(struct store_t *s, const char *search_file,
-				  int comp_flags);
+static void filter_ports_by_pfile(struct store_t *s, int should_have_matched,
+				  const char *search_file, int comp_flags);
 
 /*
  * Place plist files that match `arg->re' in the appropriate `plist'
@@ -366,9 +368,6 @@ filter_ports(struct store_t *s, const struct options_t *opts)
 	if (opts->icase)
 		comp_flags |= REG_ICASE;
 
-	if (opts->search_crit & SEARCH_BY_PFILE)
-		filter_ports_by_pfile(s, opts->search_file, comp_flags);
-
 	if (opts->search_crit & SEARCH_BY_NAME)
 		xregcomp(&name_re, opts->search_name, comp_flags);
 	if (opts->search_crit & SEARCH_BY_KEY)
@@ -461,6 +460,17 @@ filter_ports(struct store_t *s, const struct options_t *opts)
 					cur_port->matched |= SEARCH_BY_WWW;
 		}
 
+	/*
+	 * Optimization:
+	 * Call filter_ports_by_pfile() after other filtering because it
+	 * loads plists only for ports that have been matched by other
+	 * search criteria (if any). Thus we avoid loading plists for all
+	 * ports in the case of ``-p sysutils/portseach -f .*'' for example.
+	 */
+	if (opts->search_crit & SEARCH_BY_PFILE)
+		filter_ports_by_pfile(s, opts->search_crit & ~SEARCH_BY_PFILE,
+				      opts->search_file, comp_flags);
+
 	if (opts->search_crit & SEARCH_BY_NAME)
 		xregfree(&name_re);
 	if (opts->search_crit & SEARCH_BY_KEY)
@@ -488,13 +498,14 @@ filter_ports(struct store_t *s, const struct options_t *opts)
 }
 
 static void
-filter_ports_by_pfile(struct store_t *s, const char *search_file,
-		      int comp_flags)
+filter_ports_by_pfile(struct store_t *s, int should_have_matched,
+		      const char *search_file, int comp_flags)
 {
 	FILE		*plist_fp;
 	struct garg_t	garg;
 
 	garg.store = s;
+	garg.should_have_matched = should_have_matched;
 
 	xregcomp(&garg.re, search_file, comp_flags);
 
@@ -673,6 +684,9 @@ gather_pfiles(char *line, void *arg_void)
 
 	get_port_by_id(&arg->store->ports, portid, &port);
 
+	if (arg->should_have_matched && !port->matched)
+		return;
+
 	if ((port->matched & SEARCH_BY_PFILE) == 0)
 		v_start(&port->plist, 2);
 
@@ -731,7 +745,11 @@ ports_cmp(const void *p1v, const void *p2v)
 	if (p2 == NULL)
 		return 1;
 
-	return p1->id - p2->id;
+	if (p1->id < p2->id)
+		return -1;
+	if (p1->id > p2->id)
+		return 1;
+	return 0;
 }
 
 int
@@ -847,7 +865,11 @@ plines_cmp(const void *l1v, const void *l2v)
 	l1 = (struct pline_t *)l1v;
 	l2 = (struct pline_t *)l2v;
 
-	return l1->portid - l2->portid;
+	if (l1->portid < l2->portid)
+		return -1;
+	if (l1->portid > l2->portid)
+		return 1;
+	return 0;
 }
 
 static void

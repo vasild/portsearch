@@ -35,4 +35,26 @@
 
 	* 1.2.3 released
 
+2006-11-02	Vasil Dimov <vd@FreeBSD.org>
+
+	* display.c, display.h, portsearch.c:
+	added new output option: `rawfiles' to request outputting only matched
+	pfiles one by line, it makes sense only if used with -f or -b. When it
+	is specified any other output options are ignored.
+
+	* portsearch.c:
+	changed -b option the be the same as -f '(^|/)file$' instead of
+	-f '/file$'
+
+	* portsearch.c:
+	added new option -L to mimic -p path -f '.*' -o rawfiles e.g. show all
+	pfiles for (usually) one port. Inspired by pkg_info -L pkgname.
+
+	* store_txt.c:
+	optimization: do not load pfiles for ports that have not been matched
+	by other search criteria (when there are other criteria than -f). We
+	do not care about those pfiles because their ports will not be
+	displayed anyway. This prevents loading all pfiles for all ports when
+	something like -p path -f '.*' is specified.
+
 EOF

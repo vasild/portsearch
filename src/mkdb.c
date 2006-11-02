@@ -49,7 +49,7 @@
 #include "vector.h"
 #include "xlibc.h"
 
-__RCSID("$Id: mkdb.c,v 1.20 2006/04/27 08:50:33 dd Exp $");
+__RCSID("$Id: mkdb.c,v 1.21 2006/11/02 16:38:50 dd Exp $");
 
 /* process_indexline parameter */
 struct pi_arg_t {
@@ -181,7 +181,7 @@ process_indexline(char *line, void *arg_void)
 
 	parse_indexln(&addport);
 
-#define TEST	1
+#define TEST	0
 
 #if TEST
 	if (strncmp("/usr/ports/archivers", addport.path, 20) == 0)
