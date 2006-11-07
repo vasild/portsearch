@@ -60,6 +60,15 @@
 2006-11-03	Vasil Dimov <vd@FreeBSD.org>
 
 	* portsearch.c:
-	Ignore case by default and add -S option to force case sensitivity
+	ignore case by default and add -S option to force case sensitivity
+
+2006-11-07	Vasil Dimov <vd@FreeBSD.org>
+
+	* portsearch.c, portsearch.h, store_txt.c:
+	change behavior not to ignore case for pfiles by default because it is
+	really very slow. Separate case sensitivity options for pfiles and
+	other fields. Now -I requests "ignore case for pfiles" and -S "be case
+	sensitive for all fields". The default is to be case sensitive for
+	pfiles and not for other fields.
 
 EOF
