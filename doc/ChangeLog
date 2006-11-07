@@ -1,19 +1,19 @@
 2006-01-31	Vasil Dimov <vd@FreeBSD.org>
 
 	* ChangeLog:
-	added
+	Added.
 
 	* Makefile:
 	`all' target added to make the FreeBSD port even simpler does the same
-	as the build target
+	as the build target.
 
 	* display.c, display.h, portsearch.c, portsearch.h:
-	added support for outputting a predefined subset of fields
+	Added support for outputting a predefined subset of fields.
 
 	* 1.2.0 released
 
 	* display.c exhaust_fp.c store_txt.c vector.c xlibc.c:
-	fix compilation on 4.x by substituting %zu with %u and a typecast
+	Fix compilation on 4.x by substituting %zu with %u and a typecast.
 
 	* 1.2.1 released
 
@@ -22,14 +22,14 @@
 2006-03-27	Vasil Dimov <vd@FreeBSD.org>
 
 	* portsearch.c, portsearch.h:
-	added -b option for searching against packing list file's
+	Added -b option for searching against packing list file's
 	basename. Does the same as -f '/file$', I just got tired of typing
 	the later.
 
 2006-04-27	Vasil Dimov <vd@FreeBSD.org>
 
 	* store_txt.c:
-	bugfix: do not ignore -I option for pfiles
+	Bugfix: do not ignore -I option for pfiles.
 
 2006-04-28	Vasil Dimov <vd@FreeBSD.org>
 
@@ -38,20 +38,20 @@
 2006-11-02	Vasil Dimov <vd@FreeBSD.org>
 
 	* display.c, display.h, portsearch.c:
-	added new output option: `rawfiles' to request outputting only matched
+	Added new output option: `rawfiles' to request outputting only matched
 	pfiles one by line, it makes sense only if used with -f or -b. When it
 	is specified any other output options are ignored.
 
 	* portsearch.c:
-	changed -b option to be the same as -f '(^|/)file$' instead of
-	-f '/file$'
+	Changed -b option to be the same as -f '(^|/)file$' instead of
+	-f '/file$'.
 
 	* portsearch.c:
-	added new option -L to mimic -p path -f '.*' -o rawfiles e.g. show all
+	Added new option -L to mimic -p path -f '.*' -o rawfiles e.g. show all
 	pfiles for (usually) one port. Inspired by pkg_info -L pkgname.
 
 	* store_txt.c:
-	optimization: do not load pfiles for ports that have not been matched
+	Optimization: do not load pfiles for ports that have not been matched
 	by other search criteria (when there are other criteria than -f). We
 	do not care about those pfiles because their ports will not be
 	displayed anyway. This prevents loading all pfiles for all ports when
@@ -60,12 +60,12 @@
 2006-11-03	Vasil Dimov <vd@FreeBSD.org>
 
 	* portsearch.c:
-	ignore case by default and add -S option to force case sensitivity
+	Ignore case by default and add -S option to force case sensitivity.
 
 2006-11-07	Vasil Dimov <vd@FreeBSD.org>
 
 	* portsearch.c, portsearch.h, store_txt.c:
-	change behavior not to ignore case for pfiles by default because it is
+	Change behavior not to ignore case for pfiles by default because it is
 	really very slow. Separate case sensitivity options for pfiles and
 	other fields. Now -I requests "ignore case for pfiles" and -S "be case
 	sensitive for all fields". The default is to be case sensitive for
