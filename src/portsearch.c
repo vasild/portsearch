@@ -46,7 +46,7 @@
 #define OPT_KEY		"key="
 #define OPT_KEY_LEN	4
 
-__RCSID("$Id: portsearch.c,v 1.20 2006/11/07 14:26:59 dd Exp $");
+__RCSID("$Id: portsearch.c,v 1.21 2006/11/07 15:12:57 dd Exp $");
 
 /*
  * Retrieve PORTSDIR using make -V PORTSDIR
@@ -170,8 +170,9 @@ usage()
 	fprintf(stderr, "  -w www\twww site\n");
 	fprintf(stderr, "  -f file\tpacking list file\n");
 	fprintf(stderr, "  -b file\tpacking list file's basename - same as -f '(^|/)file$'\n");
-	fprintf(stderr, "  -I\t\tignore case (default)\n");
-	fprintf(stderr, "  -S\t\tcase sensitive\n");
+	fprintf(stderr, "  by default case is ignored for all fields except pfiles\n");
+	fprintf(stderr, "  -I\t\tignore case even for pfiles\n");
+	fprintf(stderr, "  -S\t\tforce case sensitivity for all fields\n");
 	fprintf(stderr, "  -o fields\toutput fields, default: %s\n", DFLT_OUTFLDS);
 	fprintf(stderr, "\t\tspecial field `rawfiles' outputs only pfiles, one per line\n");
 	fprintf(stderr, "\t\tand can be used only with -f or -b\n");
@@ -191,7 +192,10 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 	int	major_requests;
 
 	opts->outflds = DFLT_OUTFLDS;
-	opts->icase = 1;  /* ignore case by default */
+	/* by default, ignore case for all fields except pfiles */
+	opts->icase_fields = 1;
+	/* by default, be case sensitive for pfiles (ignoring case is _slow_) */
+	opts->icase_pfiles = 0;
 
 	while ((ch = getopt(argc, argv,
 			    "H:uv"
@@ -228,7 +232,7 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 			opts->search_fdep = optarg;
 			break;
 		case 'I':
-			opts->icase = 1;
+			opts->icase_pfiles = 1;
 			break;
 		case 'P':
 			opts->search_crit |= SEARCH_BY_PDEP;
@@ -239,7 +243,7 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 			opts->search_rdep = optarg;
 			break;
 		case 'S':
-			opts->icase = 0;
+			opts->icase_fields = 0;
 			break;
 		case 'b':
 			opts->search_crit |= SEARCH_BY_PFILE;

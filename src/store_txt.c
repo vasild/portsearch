@@ -58,7 +58,7 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-__RCSID("$Id: store_txt.c,v 1.20 2006/11/02 16:38:50 dd Exp $");
+__RCSID("$Id: store_txt.c,v 1.21 2006/11/07 15:12:57 dd Exp $");
 
 struct pline_t {
 	unsigned	portid;
@@ -131,7 +131,7 @@ static void add_port_index(struct store_t *s, const struct port_t *port);
  * skip all ports that have `matched' member equal to zero.
  */
 static void filter_ports_by_pfile(struct store_t *s, int should_have_matched,
-				  const char *search_file, int comp_flags);
+				  const char *search_file, int regcomp_flags);
 
 /*
  * Place plist files that match `arg->re' in the appropriate `plist'
@@ -360,40 +360,44 @@ filter_ports(struct store_t *s, const struct options_t *opts)
 	regex_t		rdep_re;
 	regex_t		dep_re;
 	regex_t		www_re;
-	int		comp_flags;
+	int		regcomp_flags_fields;
+	int		regcomp_flags_pfiles;
 	size_t		i;
 
-	comp_flags = REG_EXTENDED | REG_NOSUB;
+	regcomp_flags_fields = REG_EXTENDED | REG_NOSUB;
+	regcomp_flags_pfiles = REG_EXTENDED | REG_NOSUB;
 
-	if (opts->icase)
-		comp_flags |= REG_ICASE;
+	if (opts->icase_fields)
+		regcomp_flags_fields |= REG_ICASE;
+	if (opts->icase_pfiles)
+		regcomp_flags_pfiles |= REG_ICASE;
 
 	if (opts->search_crit & SEARCH_BY_NAME)
-		xregcomp(&name_re, opts->search_name, comp_flags);
+		xregcomp(&name_re, opts->search_name, regcomp_flags_fields);
 	if (opts->search_crit & SEARCH_BY_KEY)
-		xregcomp(&key_re, opts->search_key, comp_flags);
+		xregcomp(&key_re, opts->search_key, regcomp_flags_fields);
 	if (opts->search_crit & SEARCH_BY_PATH)
-		xregcomp(&path_re, opts->search_path, comp_flags);
+		xregcomp(&path_re, opts->search_path, regcomp_flags_fields);
 	if (opts->search_crit & SEARCH_BY_INFO)
-		xregcomp(&info_re, opts->search_info, comp_flags);
+		xregcomp(&info_re, opts->search_info, regcomp_flags_fields);
 	if (opts->search_crit & SEARCH_BY_MAINT)
-		xregcomp(&maint_re, opts->search_maint, comp_flags);
+		xregcomp(&maint_re, opts->search_maint, regcomp_flags_fields);
 	if (opts->search_crit & SEARCH_BY_CAT)
-		xregcomp(&cat_re, opts->search_cat, comp_flags);
+		xregcomp(&cat_re, opts->search_cat, regcomp_flags_fields);
 	if (opts->search_crit & SEARCH_BY_FDEP)
-		xregcomp(&fdep_re, opts->search_fdep, comp_flags);
+		xregcomp(&fdep_re, opts->search_fdep, regcomp_flags_fields);
 	if (opts->search_crit & SEARCH_BY_EDEP)
-		xregcomp(&edep_re, opts->search_edep, comp_flags);
+		xregcomp(&edep_re, opts->search_edep, regcomp_flags_fields);
 	if (opts->search_crit & SEARCH_BY_PDEP)
-		xregcomp(&pdep_re, opts->search_pdep, comp_flags);
+		xregcomp(&pdep_re, opts->search_pdep, regcomp_flags_fields);
 	if (opts->search_crit & SEARCH_BY_BDEP)
-		xregcomp(&bdep_re, opts->search_bdep, comp_flags);
+		xregcomp(&bdep_re, opts->search_bdep, regcomp_flags_fields);
 	if (opts->search_crit & SEARCH_BY_RDEP)
-		xregcomp(&rdep_re, opts->search_rdep, comp_flags);
+		xregcomp(&rdep_re, opts->search_rdep, regcomp_flags_fields);
 	if (opts->search_crit & SEARCH_BY_WWW)
-		xregcomp(&www_re, opts->search_www, comp_flags);
+		xregcomp(&www_re, opts->search_www, regcomp_flags_fields);
 	if (opts->search_crit & SEARCH_BY_DEP)
-		xregcomp(&dep_re, opts->search_dep, comp_flags);
+		xregcomp(&dep_re, opts->search_dep, regcomp_flags_fields);
 
 	for (i = 0; i < s->ports.sz; i++)
 		if (s->ports.arr[i] != NULL)
@@ -469,7 +473,7 @@ filter_ports(struct store_t *s, const struct options_t *opts)
 	 */
 	if (opts->search_crit & SEARCH_BY_PFILE)
 		filter_ports_by_pfile(s, opts->search_crit & ~SEARCH_BY_PFILE,
-				      opts->search_file, comp_flags);
+				      opts->search_file, regcomp_flags_pfiles);
 
 	if (opts->search_crit & SEARCH_BY_NAME)
 		xregfree(&name_re);
@@ -499,7 +503,7 @@ filter_ports(struct store_t *s, const struct options_t *opts)
 
 static void
 filter_ports_by_pfile(struct store_t *s, int should_have_matched,
-		      const char *search_file, int comp_flags)
+		      const char *search_file, int regcomp_flags)
 {
 	FILE		*plist_fp;
 	struct garg_t	garg;
@@ -507,7 +511,7 @@ filter_ports_by_pfile(struct store_t *s, int should_have_matched,
 	garg.store = s;
 	garg.should_have_matched = should_have_matched;
 
-	xregcomp(&garg.re, search_file, comp_flags);
+	xregcomp(&garg.re, search_file, regcomp_flags);
 
 	plist_fp = xfopen(s->plist_fn, "r");
 

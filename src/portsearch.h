@@ -67,7 +67,10 @@ struct options_t {
 	const char	*search_rdep;
 	const char	*search_dep;
 	const char	*search_www;
-	int		icase;
+	/* when searching, ignore case for all fields except pfiles */
+	int		icase_fields;
+	/* when searching, ignore case for pfiles */
+	int		icase_pfiles;
 	const char	*outflds;
 };
 
