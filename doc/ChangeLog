@@ -43,7 +43,7 @@
 	is specified any other output options are ignored.
 
 	* portsearch.c:
-	changed -b option the be the same as -f '(^|/)file$' instead of
+	changed -b option to be the same as -f '(^|/)file$' instead of
 	-f '/file$'
 
 	* portsearch.c:
@@ -56,5 +56,10 @@
 	do not care about those pfiles because their ports will not be
 	displayed anyway. This prevents loading all pfiles for all ports when
 	something like -p path -f '.*' is specified.
+
+2006-11-03	Vasil Dimov <vd@FreeBSD.org>
+
+	* portsearch.c:
+	Ignore case by default and add -S option to force case sensitivity
 
 EOF
