@@ -46,7 +46,7 @@
 #define OPT_KEY		"key="
 #define OPT_KEY_LEN	4
 
-__RCSID("$Id: portsearch.c,v 1.21 2006/11/07 15:12:57 dd Exp $");
+__RCSID("$Id: portsearch.c,v 1.22 2006/11/07 16:28:11 dd Exp $");
 
 /*
  * Retrieve PORTSDIR using make -V PORTSDIR
@@ -178,7 +178,8 @@ usage()
 	fprintf(stderr, "\t\tand can be used only with -f or -b\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "show the recorded plist for one port:\n");
-	fprintf(stderr, "  -L path\tsame as -p path -f '.*' -o rawfiles\n");
+	fprintf(stderr, "  -L path\tshow packing list for the given port(s). Same as\n");
+	fprintf(stderr, "\t\t-p path -f '.*' -o rawfiles\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -V\t\tprint version information\n");
 
