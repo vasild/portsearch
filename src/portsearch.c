@@ -46,7 +46,7 @@
 #define OPT_KEY		"key="
 #define OPT_KEY_LEN	4
 
-__RCSID("$Id: portsearch.c,v 1.22 2006/11/07 16:28:11 dd Exp $");
+__RCSID("$Id: portsearch.c,v 1.23 2006/11/08 09:56:15 dd Exp $");
 
 /*
  * Retrieve PORTSDIR using make -V PORTSDIR
@@ -82,7 +82,6 @@ main(int argc, char **argv)
 {
 	struct options_t	opts;
 	struct store_t		*store;
-	int			outflds[DISP_FLDS_CNT];
 
 	memset(&opts, 0, sizeof(opts));
 
@@ -101,7 +100,7 @@ main(int argc, char **argv)
 		    strstr(opts.outflds, "rawfiles") != NULL)
 			errx(EX_USAGE, "-o rawfiles is specified without -f or -b");
 
-		parse_outflds(opts.outflds, outflds);
+		parse_outflds(opts.outflds, opts.outflds_parsed);
 
 		alloc_store(&store);
 
@@ -109,7 +108,7 @@ main(int argc, char **argv)
 
 		filter_ports(store, &opts);
 
-		display_ports(get_ports(store), opts.search_crit, outflds);
+		display_ports(get_ports(store), &opts);
 
 		s_search_end(store);
 
@@ -152,9 +151,12 @@ usage()
 	fprintf(stderr, "Usage:\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "update/create database:\n");
-	fprintf(stderr, "  %s -u [-H portshome] [-vvv]\n", prog);
+	fprintf(stderr, "  $ %s -u [-H portshome] [-vvv]\n", prog);
 	fprintf(stderr, "\n");
-	fprintf(stderr, "search for ports (based on extended regular expressions, case sensitive) by:\n");
+	fprintf(stderr, "search for ports:\n");
+	fprintf(stderr, "  $ %s search_options\n", prog);
+	fprintf(stderr, "  serching is based on extended regular expressions,\n");
+	fprintf(stderr, "  the following options are available:\n");
 	fprintf(stderr, "  -n name\tname (%s can be used)\n", OPT_NAME);
 	fprintf(stderr, "  -k key\tname, comment or dependencies (%s can be used)\n", OPT_KEY);
 	fprintf(stderr, "  -p path\tpath on the filesystem\n");
@@ -176,12 +178,16 @@ usage()
 	fprintf(stderr, "  -o fields\toutput fields, default: %s\n", DFLT_OUTFLDS);
 	fprintf(stderr, "\t\tspecial field `rawfiles' outputs only pfiles, one per line\n");
 	fprintf(stderr, "\t\tand can be used only with -f or -b\n");
+	fprintf(stderr, "  -X\t\twhen `-o rawfiles' is specified, prefix each filename with\n");
+	fprintf(stderr, "\t\tport's path even if only one port is found\n");
 	fprintf(stderr, "\n");
-	fprintf(stderr, "show the recorded plist for one port:\n");
-	fprintf(stderr, "  -L path\tshow packing list for the given port(s). Same as\n");
-	fprintf(stderr, "\t\t-p path -f '.*' -o rawfiles\n");
+	fprintf(stderr, "show the packing list (recorded in the database) for the given port(s):\n");
+	fprintf(stderr, "  $ %s -L path\n", prog);
+	fprintf(stderr, "  which is essentially the same as:\n");
+	fprintf(stderr, "  $ %s -p path -f '.*' -o rawfiles\n", prog);
 	fprintf(stderr, "\n");
-	fprintf(stderr, "  -V\t\tprint version information\n");
+	fprintf(stderr, "print version information:\n");
+	fprintf(stderr, "  $ %s -V\n", prog);
 
 	exit(EX_USAGE);
 }
@@ -200,7 +206,7 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 
 	while ((ch = getopt(argc, argv,
 			    "H:uv"
-			    "B:D:E:F:IP:R:Sb:c:f:i:k:m:n:o:p:w:"
+			    "B:D:E:F:IP:R:SXb:c:f:i:k:m:n:o:p:w:"
 			    "L:"
 			    "Vh"))
 	       != -1)
@@ -245,6 +251,9 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 			break;
 		case 'S':
 			opts->icase_fields = 0;
+			break;
+		case 'X':
+			opts->always_show_portpath = 1;
 			break;
 		case 'b':
 			opts->search_crit |= SEARCH_BY_PFILE;

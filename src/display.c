@@ -33,32 +33,47 @@
 #include "portsearch.h"
 #include "vector.h"
 
-__RCSID("$Id: display.c,v 1.11 2006/11/02 16:38:50 dd Exp $");
+__RCSID("$Id: display.c,v 1.12 2006/11/08 09:56:15 dd Exp $");
+
+/*
+ * Return true if at least one of `outflds' is DISP_RAWFILES
+ */
+static int is_rawfiles_on(const int outflds[DISP_FLDS_CNT]);
+
+/*
+ * Return the number of matched ports. We need this in advance if rawfiles
+ * is on because we want to prefix each filename with `portpath:' only if
+ * more than one port is matched.
+ */
+static size_t matched_ports_cnt(const struct ports_t *ports, int search_crit);
+
+/*
+ * Returns true if portpath should be shown.
+ */
+static int should_show_portpath(int rawfiles_is_on,
+				const struct ports_t *ports,
+				const struct options_t *opts);
 
 void
-display_ports(const struct ports_t *ports, int search_crit,
-	      int outflds[DISP_FLDS_CNT])
+display_ports(const struct ports_t *ports, const struct options_t *opts)
 {
 	struct vector_iterator_t	vi;
 	struct port_t			*port;
 	char				*filename;
 	int				rawfiles_is_on;
+	int				show_portpath;
 	size_t				ports_cnt;
 	size_t				files_cnt;
 	size_t				i, ii;
 
-	rawfiles_is_on = 0;
-	for (ii = 0; ii < DISP_FLDS_CNT; ii++)
-		if (outflds[ii] == DISP_RAWFILES)
-		{
-			rawfiles_is_on = 1;
-			break;
-		}
+	rawfiles_is_on = is_rawfiles_on(opts->outflds_parsed);
+
+	show_portpath = should_show_portpath(rawfiles_is_on, ports, opts);
 
 	ports_cnt = 0;
 	files_cnt = 0;
 	for (i = 0; i < ports->sz; i++)
-		if (ports->arr[i]->matched == search_crit)
+		if (ports->arr[i]->matched == opts->search_crit)
 		{
 			ports_cnt++;
 
@@ -68,12 +83,16 @@ display_ports(const struct ports_t *ports, int search_crit,
 			{
 				vi_reset(&vi, &port->plist);
 				while (vi_next(&vi, (void **)&filename))
-					printf("%s:%s\n", port->path, filename);
+				{
+					if (show_portpath)
+						printf("%s:", port->path);
+					printf("%s\n", filename);
+				}
 				continue;
 			}
 
 			for (ii = 0; ii < DISP_FLDS_CNT; ii++)
-				switch (outflds[ii])
+				switch (opts->outflds_parsed[ii])
 				{
 				case DISP_NAME:
 					printf("Port:\t%s\n", port->pkgname);
@@ -110,7 +129,7 @@ display_ports(const struct ports_t *ports, int search_crit,
 					break;
 				}
 
-			if (ISSET(SEARCH_BY_PFILE, search_crit))
+			if (ISSET(SEARCH_BY_PFILE, opts->search_crit))
 			{
 				printf("Files:\t");
 				vi_reset(&vi, &port->plist);
@@ -134,10 +153,49 @@ display_ports(const struct ports_t *ports, int search_crit,
 	if (!rawfiles_is_on)
 	{
 		printf("%u ports", (unsigned)ports_cnt);
-		if (ISSET(SEARCH_BY_PFILE, search_crit))
+		if (ISSET(SEARCH_BY_PFILE, opts->search_crit))
 			printf(", %u files", (unsigned)files_cnt);
 		printf("\n");
 	}
+}
+
+static int
+is_rawfiles_on(const int outflds[DISP_FLDS_CNT])
+{
+	int	i;
+
+	for (i = 0; i < DISP_FLDS_CNT; i++)
+		if (outflds[i] == DISP_RAWFILES)
+			return 1;
+
+	return 0;
+}
+
+static size_t
+matched_ports_cnt(const struct ports_t *ports, int search_crit)
+{
+	size_t	cnt;
+	size_t	i;
+
+	cnt = 0;
+	for (i = 0; i < ports->sz; i++)
+		if (ports->arr[i]->matched == search_crit)
+			cnt++;
+
+	return cnt;
+}
+
+static int
+should_show_portpath(int rawfiles_is_on,
+		     const struct ports_t *ports,
+		     const struct options_t *opts)
+{
+	if (rawfiles_is_on &&
+	    (opts->always_show_portpath ||
+	     matched_ports_cnt(ports, opts->search_crit) > 1))
+		return 1;
+
+	return 0;
 }
 
 /* EOF */

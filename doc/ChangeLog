@@ -71,4 +71,11 @@
 	sensitive for all fields". The default is to be case sensitive for
 	pfiles and not for other fields.
 
+2006-11-08	Vasil Dimov <vd@FreeBSD.org>
+
+	* display.c, display.h, portsearch.c, portsearch.h:
+	Prefix each filename printed (when rawfiles is on) with port's path
+	only if more than one port is found. Added -X option to force previous
+	behavior (always print port's path).
+
 EOF

@@ -46,7 +46,24 @@
 #define SEARCH_BY_DEP		010000
 #define SEARCH_BY_WWW		020000
 
-#define DFLT_OUTFLDS	"name,path,info,maint,bdep,rdep,www"
+#define DISP_NONE		0
+
+#define DISP_NAME		1
+#define DISP_PATH		2
+#define DISP_INFO		3
+#define DISP_MAINT		4
+#define DISP_CAT		5
+#define DISP_FDEP		6
+#define DISP_EDEP		7
+#define DISP_PDEP		8
+#define DISP_BDEP		9
+#define DISP_RDEP		10
+#define DISP_WWW		11
+#define DISP_RAWFILES		12
+
+#define DISP_FLDS_CNT		12
+
+#define DFLT_OUTFLDS		"name,path,info,maint,bdep,rdep,www"
 
 struct options_t {
 	const char	*portsdir;
@@ -72,6 +89,8 @@ struct options_t {
 	/* when searching, ignore case for pfiles */
 	int		icase_pfiles;
 	const char	*outflds;
+	int		outflds_parsed[DISP_FLDS_CNT];
+	int		always_show_portpath;
 };
 
 #endif  /* PORTSEARCH_H */
