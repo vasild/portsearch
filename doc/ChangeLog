@@ -78,4 +78,8 @@
 	only if more than one port is found. Added -X option to force previous
 	behavior (always print port's path).
 
+2006-11-15	Vasil Dimov <vd@FreeBSD.org>
+
+	* 1.3.0 released
+
 EOF
