@@ -58,7 +58,7 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-__RCSID("$Id: store_txt.c,v 1.21 2006/11/07 15:12:57 dd Exp $");
+__RCSID("$Id: store_txt.c,v 1.21.2.1 2007/02/06 08:23:29 dd Exp $");
 
 struct pline_t {
 	unsigned	portid;
@@ -469,7 +469,7 @@ filter_ports(struct store_t *s, const struct options_t *opts)
 	 * Call filter_ports_by_pfile() after other filtering because it
 	 * loads plists only for ports that have been matched by other
 	 * search criteria (if any). Thus we avoid loading plists for all
-	 * ports in the case of ``-p sysutils/portseach -f .*'' for example.
+	 * ports in the case of ``-p ports-mgmt/portseach -f .*'' for example.
 	 */
 	if (opts->search_crit & SEARCH_BY_PFILE)
 		filter_ports_by_pfile(s, opts->search_crit & ~SEARCH_BY_PFILE,
