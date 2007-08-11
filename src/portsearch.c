@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2006 Vasil Dimov
+ * Copyright 2005-2007 Vasil Dimov
  * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@
 #define OPT_KEY		"key="
 #define OPT_KEY_LEN	4
 
-__RCSID("$Id: portsearch.c,v 1.23 2006/11/08 09:56:15 dd Exp $");
+__RCSID("$Id: portsearch.c,v 1.23.2.1 2007/08/11 14:37:41 vd-dev Exp $");
 
 /*
  * Retrieve PORTSDIR using make -V PORTSDIR
@@ -175,7 +175,8 @@ usage()
 	fprintf(stderr, "  by default case is ignored for all fields except pfiles\n");
 	fprintf(stderr, "  -I\t\tignore case even for pfiles\n");
 	fprintf(stderr, "  -S\t\tforce case sensitivity for all fields\n");
-	fprintf(stderr, "  -o fields\toutput fields, default: %s\n", DFLT_OUTFLDS);
+	fprintf(stderr, "  -o fields\toutput fields, default: $%s if it is set in\n", ENV_DFLT_OUTFLDS_NAME);
+	fprintf(stderr, "\t\tthe environment or otherwise %s\n", DFLT_OUTFLDS);
 	fprintf(stderr, "\t\tspecial field `rawfiles' outputs only pfiles, one per line\n");
 	fprintf(stderr, "\t\tand can be used only with -f or -b\n");
 	fprintf(stderr, "  -X\t\twhen `-o rawfiles' is specified, prefix each filename with\n");
@@ -198,9 +199,14 @@ parse_opts(int argc, char **argv, struct options_t *opts)
 	int	ch;
 	int	major_requests;
 
-	opts->outflds = DFLT_OUTFLDS;
+	/* get outflds from environment, if not present, use the default */
+	opts->outflds = getenv(ENV_DFLT_OUTFLDS_NAME);
+	if (opts->outflds == NULL)
+		opts->outflds = DFLT_OUTFLDS;
+
 	/* by default, ignore case for all fields except pfiles */
 	opts->icase_fields = 1;
+
 	/* by default, be case sensitive for pfiles (ignoring case is _slow_) */
 	opts->icase_pfiles = 0;
 

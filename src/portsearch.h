@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2006 Vasil Dimov
+ * Copyright 2005-2007 Vasil Dimov
  * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 
 #include <sys/param.h>  /* for PATH_MAX */
 
-#define PORTSEARCH_VERSION	"1.3.0"
+#define PORTSEARCH_VERSION	"1.3.1"
 
 #define SEARCH_BY_PFILE		000001
 #define SEARCH_BY_NAME		000002
@@ -64,6 +64,7 @@
 #define DISP_FLDS_CNT		12
 
 #define DFLT_OUTFLDS		"name,path,info,maint,bdep,rdep,www"
+#define ENV_DFLT_OUTFLDS_NAME	"PORTSEARCH_OUTFIELDS"
 
 struct options_t {
 	const char	*portsdir;
