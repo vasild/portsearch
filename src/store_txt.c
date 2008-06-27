@@ -58,7 +58,7 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-__RCSID("$Id: store_txt.c,v 1.21.2.1 2007/02/06 08:23:29 dd Exp $");
+__RCSID("$Id: store_txt.c,v 1.21.2.2 2008/06/27 09:59:50 vd-dev Exp $");
 
 struct pline_t {
 	unsigned	portid;
@@ -806,8 +806,8 @@ load_plist(struct store_t *s)
 {
 	char	rs[2] = {RSp, '\0'};
 	char	fs[2] = {FSp, '\0'};
-	char	*raw_p, *rec, *fld;
-	size_t	rec_idx, fld_idx;
+	char	*raw_p, *rec, *portid;
+	size_t	rec_idx;
 
 	s->plist = (struct plist_t *)xmalloc(sizeof(struct plist_t));
 
@@ -825,21 +825,12 @@ load_plist(struct store_t *s)
 		if (rec[0] == '\0')
 			continue;
 
-		for (fld_idx = 0; (fld = strsep(&rec, fs)) != NULL; fld_idx++)
-		{
-			switch (fld_idx)
-			{
-			case 0:
-				s->plist->plines[rec_idx].portid =
-				    (unsigned)strtoull(fld, NULL, 10);
-				break;
-			case 1:
-				s->plist->plines[rec_idx].pfile = fld;
-				break;
-			default:
-				assert(0 && "The impossible happened, committing suicide");
-			}
-		}
+		portid = strsep(&rec, fs);
+
+		s->plist->plines[rec_idx].portid =
+			(unsigned)strtoull(portid, NULL, 10);
+
+		s->plist->plines[rec_idx].pfile = rec;
 	}
 
 	/* normally plist is loaded ordered, but just to make sure */
