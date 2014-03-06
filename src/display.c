@@ -33,8 +33,6 @@
 #include "portsearch.h"
 #include "vector.h"
 
-__RCSID("$Id: display.c,v 1.12 2006/11/08 09:56:15 dd Exp $");
-
 /*
  * Return true if at least one of `outflds' is DISP_RAWFILES
  */

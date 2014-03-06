@@ -4,5 +4,3 @@
 * do everything that can be done with `make search' in the ports directory
 * be as fast as possible
 * easy addition of new search and output criteria
-
-$Id: features,v 1.3 2006/01/17 07:48:44 dd Exp $

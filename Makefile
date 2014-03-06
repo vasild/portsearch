@@ -1,8 +1,6 @@
 #
 # Portsearch
 #
-# $Id: Makefile,v 1.4 2006/01/31 06:30:40 dd Exp $
-#
 
 SUBDIRS=	src
 SUBTARGETS=	build depend clean

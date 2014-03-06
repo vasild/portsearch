@@ -3,8 +3,6 @@
 # the idea is to speed up the things, otherwise we could use
 # make generate-plist && cat `make -V TMPPLIST` && make clean
 #
-# $Id: Makefile,v 1.1 2006/01/16 08:51:32 dd Exp $
-#
 
 show-plist:
 	@for file in ${PLIST_FILES}; do \

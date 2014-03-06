@@ -42,8 +42,6 @@
 #define PIPE_IN		1
 #define PIPE_OUT	0
 
-__RCSID("$Id: execcmd.c,v 1.4 2006/01/30 12:44:16 dd Exp $");
-
 void
 execcmd(const char *cmd, char *const args[],
 	void (*process)(char *, void *), void *process_arg)

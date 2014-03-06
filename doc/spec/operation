@@ -1,5 +1,3 @@
-$Id: operation,v 1.2 2006/01/17 07:48:44 dd Exp $
-
 database build:
 
 for each line in /usr/ports/INDEX

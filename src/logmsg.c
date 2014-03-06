@@ -31,8 +31,6 @@
 
 #include "logmsg.h"
 
-__RCSID("$Id: logmsg.c,v 1.3 2006/01/30 12:44:16 dd Exp $");
-
 void
 logmsg(enum l_prio priority, int verbose, const char *msg, ...)
 {

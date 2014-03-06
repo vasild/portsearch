@@ -34,8 +34,6 @@
 
 #include "exhaust_fp.h"
 
-__RCSID("$Id: exhaust_fp.c,v 1.4 2006/01/31 12:50:16 dd Exp $");
-
 void
 exhaust_fp(FILE *fp, void (*process)(char *, void *), void *process_arg)
 {

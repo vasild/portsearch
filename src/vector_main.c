@@ -31,8 +31,6 @@
 
 #include "vector.h"
 
-__RCSID("$Id: vector_main.c,v 1.3 2006/01/30 12:44:16 dd Exp $");
-
 int
 main(int argc, char **argv)
 {

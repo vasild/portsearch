@@ -49,8 +49,6 @@
 #include "vector.h"
 #include "xlibc.h"
 
-__RCSID("$Id: mkdb.c,v 1.21 2006/11/02 16:38:50 dd Exp $");
-
 /* process_indexline parameter */
 struct pi_arg_t {
 	const struct options_t	*opts;

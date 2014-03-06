@@ -46,8 +46,6 @@
 #define OPT_KEY		"key="
 #define OPT_KEY_LEN	4
 
-__RCSID("$Id: portsearch.c,v 1.23.2.1 2007/08/11 14:37:41 vd-dev Exp $");
-
 /*
  * Retrieve PORTSDIR using make -V PORTSDIR
  */

@@ -1,8 +1,6 @@
 #
 # Portsearch
 #
-# $Id: Makefile,v 1.9 2006/01/16 17:37:53 dd Exp $
-#
 
 PROGS=\
 	portsearch \

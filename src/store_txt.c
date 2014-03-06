@@ -58,8 +58,6 @@
 #define RSp	'\n'  /* record separator for plist file */
 #define FSp	'|'  /* field separator for plist file */
 
-__RCSID("$Id: store_txt.c,v 1.21.2.2 2008/06/27 09:59:50 vd-dev Exp $");
-
 struct pline_t {
 	unsigned	portid;
 	char		*pfile;

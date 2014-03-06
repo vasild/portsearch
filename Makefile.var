@@ -1,8 +1,6 @@
 #
 # Portsearch
 #
-# $Id: Makefile.var,v 1.4 2006/04/27 08:44:46 dd Exp $
-#
 
 LOCALBASE?=	/usr/local
 PREFIX?=	${LOCALBASE}
