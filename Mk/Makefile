@@ -27,7 +27,7 @@ show-plist:
 .endif
 .endfor
 .endif
-	@if [ -f ${PLIST} ]; then \
+	@if [ -f "${PLIST}" ]; then \
 		${SED} ${PLIST_SUB:S/$/!g/:S/^/ -e s!%%/:S/=/%%!/} ${PLIST} ; \
 	fi
 
