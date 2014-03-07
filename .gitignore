@@ -1,0 +1,3 @@
+src/*.o
+src/portsearch
+src/vector_main
