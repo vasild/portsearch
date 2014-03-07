@@ -115,4 +115,8 @@
 	in "make install", so they need to be fixed, but a workaround in
 	portsearch is easy enough.
 
+2014-03-07	Vasil Dimov <vd@FreeBSD.org>
+
+	* 1.3.3 released
+
 EOF
