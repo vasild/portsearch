@@ -276,13 +276,13 @@ mkplist(struct port_t *port, const struct pi_arg_t *arg)
 	char		*cmd = "make";
 #if __FreeBSD_version >= 500000
 	char *const	args[] = {cmd,
-		"-C", port->path, "-f", our_makefile, "-f", port_makefile,
+		"-C", port->path, "-f", port_makefile, "-f", our_makefile,
 		"show-plist", NULL};
 #else  /* 4.x handles -C differently */
 	char		curdir_arg[PATH_MAX];
 	char *const	args[] = {cmd,
 		"-C", port->path, curdir_arg,
-		"-f", our_makefile, "-f", port_makefile,
+		"-f", port_makefile, "-f", our_makefile,
 		"show-plist", NULL};
 	snprintf(curdir_arg, sizeof(curdir_arg), ".CURDIR=%s", port->path);
 
