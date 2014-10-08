@@ -47,10 +47,10 @@ void alloc_store(struct store_t **s);
 void free_store(struct store_t *s);
 
 /*
- * Check if store exists. If `s' is a NULL pointer then check if default store
- * exists. Returns 1 for existence, 0 otherwise.
+ * Check if the store exists.
+ * Return 1 for existence, 0 otherwise.
  */
-int s_exists(struct store_t *s);
+int s_exists();
 
 /*
  * Return internal `ports' structure

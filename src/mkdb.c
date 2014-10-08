@@ -117,7 +117,7 @@ mkdb(const struct options_t *opts)
 
 	alloc_store(&arg.store);
 
-	arg.s_exists = s_exists(NULL);
+	arg.s_exists = s_exists();
 	if (arg.s_exists)
 	{
 		s_read_start(arg.store);

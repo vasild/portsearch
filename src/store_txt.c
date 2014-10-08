@@ -198,22 +198,14 @@ free_store(struct store_t *s)
 }
 
 int
-s_exists(struct store_t *s)
+s_exists()
 {
-	struct store_t	s_default;
-	struct store_t	*p;
+	struct store_t	store;
 
-	if (s != NULL)
-	{
-		p = s;
-	}
-	else
-	{
-		set_filenames(&s_default);
-		p = &s_default;
-	}
+	set_filenames(&store);
 
-	if (access(p->index_fn, F_OK) == -1 || access(p->plist_fn, F_OK) == -1)
+	if (access(store.index_fn, F_OK) == -1 ||
+	    access(store.plist_fn, F_OK) == -1)
 		return 0;
 
 	return 1;

@@ -91,7 +91,7 @@ main(int argc, char **argv)
 		mkdb(&opts);
 	else if (opts.search_crit)
 	{
-		if (!s_exists(NULL))
+		if (!s_exists())
 			errx(EX_USAGE, "Database does not exist, please create it first using the -u option");
 
 		if (!ISSET(SEARCH_BY_PFILE, opts.search_crit) &&
