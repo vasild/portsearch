@@ -15,9 +15,9 @@ ${target}:
 all: build
 
 install: build
-	${INSTALL_PROGRAM} src/portsearch ${PREFIX}/bin/
-	${MKDIR} ${DATADIR}
-	${INSTALL_DATA} Mk/Makefile ${DATADIR}/
+	${BSD_INSTALL_PROGRAM} src/portsearch $(DESTDIR)${PREFIX}/bin/
+	${MKDIR} $(DESTDIR)${DATADIR}
+	${BSD_INSTALL_DATA} Mk/Makefile $(DESTDIR)${DATADIR}/
 
 .include "Makefile.var"
 
