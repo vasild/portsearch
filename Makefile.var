@@ -7,8 +7,8 @@ PREFIX?=	${LOCALBASE}
 DATADIR?=	${PREFIX}/share/portsearch
 
 INSTALL?=	install
-INSTALL_PROGRAM?=	${INSTALL} ${STRIP} -o root -g wheel -m 555
-INSTALL_DATA?=	${INSTALL} -o root -g wheel -m 444
+BSD_INSTALL_PROGRAM?=	${INSTALL} ${STRIP} -o root -g wheel -m 555
+BSD_INSTALL_DATA?=	${INSTALL} -o root -g wheel -m 444
 MAKE?=	/usr/bin/make
 MKDEP?=	/usr/bin/mkdep
 MKDIR?=	/bin/mkdir -p
