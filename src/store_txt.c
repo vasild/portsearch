@@ -32,6 +32,7 @@
 #include <sys/utsname.h>
 
 #include <assert.h>
+#include <ctype.h>
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -518,12 +519,25 @@ static void
 set_filenames(struct store_t *s)
 {
 	struct utsname	un;
+	/* number of characters to pick from the start of un.release */
+	int		release_chars;
 
 	if (uname(&un) == -1)
 		err(EX_OSERR, "uname()");
 
-	snprintf(s->dir, sizeof(s->dir), "%s/%c-%s",
-		 DBDIR, un.release[0], un.machine);
+	/* un.release is something like "10.1-BETA3", pick up "10" from it. */
+	release_chars = 0;
+	while (isdigit(un.release[release_chars])) {
+		release_chars++;
+	}
+
+	/* If un.release contains something unexpected, then pick it all. */
+	if (release_chars == 0) {
+		release_chars = strlen(un.release);
+	}
+
+	snprintf(s->dir, sizeof(s->dir), "%s/%.*s-%s",
+		 DBDIR, release_chars, un.release, un.machine);
 
 	snprintf(s->newdir, sizeof(s->newdir), "%s.new", s->dir);
 	snprintf(s->olddir, sizeof(s->olddir), "%s.old", s->dir);
