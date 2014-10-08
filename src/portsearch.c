@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2007 Vasil Dimov
+ * Copyright 2005-2014 Vasil Dimov
  * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
