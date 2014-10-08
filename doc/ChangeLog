@@ -128,4 +128,11 @@
 	FreeBSD 8.x, 9.x, but ended up with e.g. 1-amd64 instead of 10-amd64
 	for two-digit major releases.
 
+	* Makefile, Makefile.var:
+	Add native staging support while installing via ports-mgmt/portsearch
+
+2014-10-09	Vasil Dimov <vd@FreeBSD.org>
+
+	* 1.3.4 released
+
 EOF
