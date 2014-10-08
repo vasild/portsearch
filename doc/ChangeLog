@@ -119,4 +119,13 @@
 
 	* 1.3.3 released
 
+2014-10-08	Vasil Dimov <vd@FreeBSD.org>
+
+	* src/store_txt.c:
+	Bugfix: use the full major version number for the database directory.
+	Before this bug it only picked up the first character of the release
+	version, which worked fine for single-digit major releases, e.g.
+	FreeBSD 8.x, 9.x, but ended up with e.g. 1-amd64 instead of 10-amd64
+	for two-digit major releases.
+
 EOF
