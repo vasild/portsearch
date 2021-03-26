@@ -135,4 +135,14 @@
 
 	* 1.3.4 released
 
+2021-03-26	Vasil Dimov <vd@FreeBSD.org>
+
+	* Mk/Makefile:
+	Update to the latest version of generate-plist from bsd.port.mk to fix
+	processing of lang/perl5-devel.
+
+2021-03-26	Vasil Dimov <vd@FreeBSD.org>
+
+	* 1.3.5 released
+
 EOF

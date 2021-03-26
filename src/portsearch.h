@@ -29,7 +29,7 @@
 
 #include <sys/param.h>  /* for PATH_MAX */
 
-#define PORTSEARCH_VERSION	"1.3.4"
+#define PORTSEARCH_VERSION	"1.3.5"
 
 #define SEARCH_BY_PFILE		000001
 #define SEARCH_BY_NAME		000002
